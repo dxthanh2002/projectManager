@@ -1,0 +1,432 @@
+{
+  "info": {
+    "name": "Better Auth API Testing",
+    "description": "Collection để test Better Auth API với Express backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "session_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Sign Up (Đăng ký)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Lưu session token vào environment variable",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.session && jsonData.session.token) {",
+              "        pm.environment.set('session_token', jsonData.session.token);",
+              "        console.log('Session token saved:', jsonData.session.token);",
+              "    }",
+              "}",
+              "",
+              "// Test response",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has user object', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('user');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"Test User\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/auth/sign-up/email",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "auth", "sign-up", "email"]
+        },
+        "description": "Đăng ký tài khoản mới với email và password"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Sign In (Đăng nhập)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Lưu session token",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.session && jsonData.session.token) {",
+              "        pm.environment.set('session_token', jsonData.session.token);",
+              "        console.log('Session token saved:', jsonData.session.token);",
+              "    }",
+              "}",
+              "",
+              "// Tests",
+              "pm.test('Login successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Has session token', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.session).to.have.property('token');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/auth/sign-in/email",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "auth", "sign-in", "email"]
+        },
+        "description": "Đăng nhập với email và password đã đăng ký"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get Session (Kiểm tra phiên)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Session is valid', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('User data returned', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('user');",
+              "    pm.expect(jsonData.user).to.have.property('email');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "better-auth.session_token={{session_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/auth/get-session",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "auth", "get-session"]
+        },
+        "description": "Lấy thông tin phiên đăng nhập hiện tại. Cần có session token."
+      },
+      "response": []
+    },
+    {
+      "name": "4. Update User (Cập nhật thông tin)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Update successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('User info updated', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.user).to.have.property('name');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "better-auth.session_token={{session_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated User Name\",\n  \"image\": \"https://example.com/avatar.jpg\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/auth/update-user",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "auth", "update-user"]
+        },
+        "description": "Cập nhật thông tin user (name, image, etc). Cần authentication."
+      },
+      "response": []
+    },
+    {
+      "name": "5. Change Password (Đổi mật khẩu)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Password changed successfully', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "better-auth.session_token={{session_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"currentPassword\": \"password123\",\n  \"newPassword\": \"newPassword456\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/auth/change-password",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "auth", "change-password"]
+        },
+        "description": "Đổi mật khẩu. Cần cung cấp mật khẩu hiện tại và mật khẩu mới."
+      },
+      "response": []
+    },
+    {
+      "name": "6. Forget Password (Quên mật khẩu)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Reset email sent', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@example.com\",\n  \"redirectTo\": \"http://localhost:3000/reset-password\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/auth/forget-password",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "auth", "forget-password"]
+        },
+        "description": "Gửi email reset mật khẩu khi user quên mật khẩu"
+      },
+      "response": []
+    },
+    {
+      "name": "7. Reset Password (Reset mật khẩu)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Password reset successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"RESET_TOKEN_FROM_EMAIL\",\n  \"newPassword\": \"newPassword789\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/auth/reset-password",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "auth", "reset-password"]
+        },
+        "description": "Reset mật khẩu bằng token nhận được từ email"
+      },
+      "response": []
+    },
+    {
+      "name": "8. List Sessions (Danh sách phiên)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Sessions retrieved', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response is array', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "better-auth.session_token={{session_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/auth/list-sessions",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "auth", "list-sessions"]
+        },
+        "description": "Lấy danh sách tất cả các phiên đăng nhập của user"
+      },
+      "response": []
+    },
+    {
+      "name": "9. Sign Out (Đăng xuất)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Sign out successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Xóa session token sau khi đăng xuất",
+              "pm.environment.unset('session_token');",
+              "console.log('Session token cleared');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "better-auth.session_token={{session_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/auth/sign-out",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "auth", "sign-out"]
+        },
+        "description": "Đăng xuất khỏi phiên hiện tại"
+      },
+      "response": []
+    },
+    {
+      "name": "10. Verify Email (Xác thực email)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Email verified', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"VERIFICATION_TOKEN_FROM_EMAIL\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/auth/verify-email",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "auth", "verify-email"]
+        },
+        "description": "Xác thực email bằng token nhận được từ email"
+      },
+      "response": []
+    }
+  ]
+}

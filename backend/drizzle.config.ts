@@ -1,0 +1,19 @@
+import 'dotenv/config';
+import { defineConfig } from 'drizzle-kit';
+import dotenv from 'dotenv';
+
+
+dotenv.config({
+    path: "./src/.env",
+});
+
+export default defineConfig({
+    schema: "./src/schema",
+    out: "./src/migrations",
+    dialect: "mysql",
+    dbCredentials: {
+        url: process.env.DATABASE_URL as string || "",
+    },
+    verbose: true,
+    strict: true,
+});
