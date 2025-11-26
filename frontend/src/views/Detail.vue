@@ -2,14 +2,9 @@
 
 </script>
 <template>
-    <div class="bg-p-950">
-      <div class=" text-black/50">
-        <p class="text-3xl text-center underline">© Detail 2025</p>
-        <p class=" mt-9"></p>
-      </div>
-    </div>
+  <div class="bg-p-950">
+    <p>Details</p>
+  </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
