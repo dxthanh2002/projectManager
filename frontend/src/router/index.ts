@@ -7,12 +7,18 @@ const About = () => import("@/views/About.vue");
 // const Detail = () => import("../views/Detail.vue");
 const Main = () => import("@/views/Main.vue");
 const NotFound = () => import("@/views/NotFound.vue");
+const SignUp = () => import("@/views/Auth/SignUpPage.vue");
 
 const routes = [
   {
     path: "/",
     name: "Home",
     component: Main,
+  },
+    {
+    path: "/signup",
+    name: "SignUp",
+    component: SignUp,
   },
   {
     path: "/about",
