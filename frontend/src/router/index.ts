@@ -9,6 +9,7 @@ const Main = () => import("@/views/Main.vue");
 const NotFound = () => import("@/views/NotFound.vue");
 const SignIn = () => import("@/views/Auth/SignInPage.vue");
 const SignUp = () => import("@/views/Auth/SignUpPage.vue");
+const Welcome = () => import("@/views/Auth/Welcome.vue");
 
 const routes = [
   {
@@ -25,6 +26,11 @@ const routes = [
     path: "/signup",
     name: "SignUp",
     component: SignUp,
+  },
+  {
+    path: "/welcome",
+    name: "Welcome",
+    component: Welcome,
   },
   {
     path: "/about",

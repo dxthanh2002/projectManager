@@ -14,8 +14,8 @@ const PORT = process.env.PORT || 5001;
 // CORS
 app.use(
   cors({
-    origin: 5001 || "",
-    methods: ["GET", "POST", "OPTIONS"],
+    origin: process.env.CORS_ORIGIN || "",
+    methods: ["GET", "POST", "OPTIONS","PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })

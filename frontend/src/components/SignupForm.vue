@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from "vue"
+import { ref } from "vue"
 import { cn } from "@/lib/utils"
 import { useForm, useField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
+import { useRouter } from "vue-router"
 import Button from "@/components/ui/button/Button.vue"
 import {
     Card,
@@ -19,10 +21,15 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { signUpSchema, type SignUpFormData } from "@/schemas/authSchema"
+import { authClient } from "@/lib/auth-client"
 
 const props = defineProps<{
     class?: HTMLAttributes["class"]
 }>()
+
+const router = useRouter()
+const isLoading = ref(false)
+const serverError = ref<string | null>(null)
 
 // Set up form with Vee-Validate and Zod
 const validationSchema = toTypedSchema(signUpSchema)
@@ -38,28 +45,45 @@ const { value: password } = useField<string>('password')
 // Handle form submission
 const onSubmit = handleSubmit(async (data: SignUpFormData) => {
     try {
-        console.log("tesst");
-        console.log('Form data:', data);
-        // Call API endpoint
-        const response = await fetch('/api/auth/signup', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                
+        isLoading.value = true
+        serverError.value = null
+
+        console.log('Submitting sign up form', data)
+
+        const { data: result, error } = await authClient.signUp.email({
+            email: data.email,
+            password: data.password,
+            name: data.name,
+            callbackURL: "/welcome"
+        }, {
+            onRequest: () => {
+                isLoading.value = true
             },
-            body: JSON.stringify(data),
+            onSuccess: () => {
+                console.log('Sign up successful')
+                router.push('/signin')
+            },
+            onError: (ctx: any) => {
+                serverError.value = ctx.error.message
+                console.error('Sign up error:', ctx.error.message)
+                isLoading.value = false
+            }
         })
 
-        if (!response.ok) {
-            throw new Error('Sign up failed')
+        if (error) {
+            serverError.value = error.message
+            console.error('Sign up failed:', error)
+        } else if (result) {
+            console.log('Sign up successful:', result)
+            router.push('/signin')
         }
-
-        const result = await response.json()
-        console.log('Sign up successful:', result)
-        // Handle success - redirect or show message
-    } catch (error) {
-        console.error('Error during sign up:', error)
-        // Handle error - show error message
+    } catch (err: unknown) {
+        const error = err as any
+        const serverMsg = error?.message ?? error?.toString() ?? 'Sign up failed'
+        serverError.value = serverMsg
+        console.error('Error during sign up:', serverMsg)
+    } finally {
+        isLoading.value = false
     }
 })
 </script>
@@ -78,11 +102,17 @@ const onSubmit = handleSubmit(async (data: SignUpFormData) => {
             <CardContent>
                 <form @submit.prevent="onSubmit">
                     <FieldGroup>
+                        <Field v-if="serverError">
+                            <FieldDescription class="text-red-500 bg-red-50 p-3 rounded">
+                                {{ serverError }}
+                            </FieldDescription>
+                        </Field>
                         <Field>
                             <FieldLabel for="name">
                                 Full Name
                             </FieldLabel>
-                            <Input id="name" name="name" type="text" placeholder="John Doe" v-model="name" />
+                            <Input id="name" name="name" type="text" placeholder="John Doe" v-model="name"
+                                :disabled="isLoading" />
                             <FieldDescription v-if="errors.name" class="text-red-500">
                                 {{ errors.name }}
                             </FieldDescription>
@@ -91,8 +121,8 @@ const onSubmit = handleSubmit(async (data: SignUpFormData) => {
                             <FieldLabel for="email">
                                 Email
                             </FieldLabel>
-                            <Input id="email" name="email" type="email" placeholder="m@example.com"
-                                v-model="email" />
+                            <Input id="email" name="email" type="email" placeholder="m@example.com" v-model="email"
+                                :disabled="isLoading" />
                             <FieldDescription v-if="errors.email" class="text-red-500">
                                 {{ errors.email }}
                             </FieldDescription>
@@ -101,7 +131,8 @@ const onSubmit = handleSubmit(async (data: SignUpFormData) => {
                             <FieldLabel for="password">
                                 Password
                             </FieldLabel>
-                            <Input id="password" name="password" type="password" v-model="password" />
+                            <Input id="password" name="password" type="password" v-model="password"
+                                :disabled="isLoading" />
                             <FieldDescription v-if="errors.password" class="text-red-500">
                                 {{ errors.password }}
                             </FieldDescription>
@@ -110,11 +141,11 @@ const onSubmit = handleSubmit(async (data: SignUpFormData) => {
                             </FieldDescription>
                         </Field>
                         <Field>
-                            <Button type="submit">
-                                Create Account
+                            <Button type="submit" :disabled="isLoading">
+                                {{ isLoading ? 'Creating Account...' : 'Create Account' }}
                             </Button>
                             <FieldDescription class="text-center">
-                                Already have an account? <a href="#">Sign in</a>
+                                Already have an account? <a href="/signin">Sign in</a>
                             </FieldDescription>
                         </Field>
                     </FieldGroup>

@@ -7,6 +7,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5,
+    },
+  },
   database: drizzleAdapter(db, {
     provider: "mysql",
     schema: {
@@ -18,9 +24,13 @@ export const auth = betterAuth({
   }),
   advanced: {
     defaultCookieAttributes: {
-      sameSite: "none",
-      secure: true,
+      sameSite: "lax",
+      secure: false,
       httpOnly: true,
     },
+  },
+  trustedOrigins: async (request: Request) => {
+    // Return an array of trusted origins based on the request
+    return ["https://localhost:5001"];
   },
 });

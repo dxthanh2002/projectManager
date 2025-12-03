@@ -23,6 +23,7 @@
     "mysql2": "^3.15.3"
   },
   "devDependencies": {
+    "@types/node": "^24.10.1",
     "drizzle-kit": "^0.31.7",
     "nodemon": "^3.1.11",
     "prettier": "3.6.2",
