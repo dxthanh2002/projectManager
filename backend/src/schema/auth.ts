@@ -83,7 +83,17 @@ export const verification = mysqlTable(
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  // Team relationships
+  teams: many(userTeam), // Teams user is a member of
+  createdTasks: many(task), // Tasks created by user
+  assignedTasks: many(task), // Tasks assigned to user
+  comments: many(comment), // Comments made by user
 }));
+
+// Import team-related tables
+import { userTeam } from "./user-teams.js";
+import { task } from "./tasks.js";
+import { comment } from "./comments.js";
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {

@@ -1,0 +1,63 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2025-12-05T11:00:29+07:00",
+    "last_updated": "2025-12-05T11:05:00+07:00",
+    "completed": "2025-12-05T11:05:00+07:00"
+  },
+  "mode": "initial_scan",
+  "scan_level": "deep",
+  "project_root": "d:\\managercheck",
+  "output_folder": "d:\\managercheck\\docs",
+  "completed_steps": [
+    {
+      "step": "step_1",
+      "status": "completed",
+      "timestamp": "2025-12-05T11:01:00+07:00",
+      "summary": "Classified as multi-part with 2 parts (backend, frontend)"
+    },
+    {
+      "step": "step_2-9",
+      "status": "completed",
+      "timestamp": "2025-12-05T11:04:00+07:00",
+      "summary": "Deep scan complete - analyzed structure, tech stack, schemas, and integration"
+    },
+    {
+      "step": "step_10",
+      "status": "completed",
+      "timestamp": "2025-12-05T11:05:00+07:00",
+      "summary": "Generated master index and all documentation files"
+    }
+  ],
+  "current_step": "complete",
+  "findings": {
+    "project_classification": "Multi-part: Express REST API + Vue 3 SPA",
+    "repository_type": "multi-part",
+    "parts_count": 2,
+    "primary_tech": "Node.js, Vue 3, MySQL"
+  },
+  "project_types": [
+    {
+      "part_id": "backend",
+      "project_type_id": "backend",
+      "display_name": "Express REST API"
+    },
+    {
+      "part_id": "frontend",
+      "project_type_id": "web",
+      "display_name": "Vue 3 SPA"
+    }
+  ],
+  "outputs_generated": [
+    "project-scan-report.json",
+    "project-overview.md",
+    "source-tree-analysis.md",
+    "data-models.md",
+    "development-guide.md",
+    "integration-architecture.md",
+    "architecture-backend.md",
+    "architecture-frontend.md",
+    "index.md"
+  ],
+  "resume_instructions": "Workflow completed successfully"
+}

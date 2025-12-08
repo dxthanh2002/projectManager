@@ -15,17 +15,28 @@ const PORT = process.env.PORT || 5001;
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "",
-    methods: ["GET", "POST", "OPTIONS","PUT", "DELETE"],
+    methods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
-// Mount Better Auth handler
-app.all("/api/auth/{*any}", toNodeHandler(auth));
+// Mount Better Auth handler - Express 5 syntax
+app.all("/api/auth/*splat", toNodeHandler(auth));
 
 // middlewares
-
 app.use(express.json());
+
+// Import routes
+import teamsRouter from "./routes/teams.js";
+import teamMembersRouter from "./routes/team-members.js";
+import tasksRouter from "./routes/tasks.js";
+import commentsRouter from "./routes/comments.js";
+
+// Mount API routes
+app.use("/api", teamsRouter);
+app.use("/api", teamMembersRouter);
+app.use("/api", tasksRouter);
+app.use("/api", commentsRouter);
 
 // public route
 
