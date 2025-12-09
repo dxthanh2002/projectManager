@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2]
+stepsCompleted: [1, 2, 3, 4, 5]
 inputDocuments:
   - docs/prd.md
   - docs/index.md
@@ -7,7 +7,7 @@ inputDocuments:
   - docs/integration-architecture.md
   - docs/analysis/brainstorming-session-2025-12-05.md
 workflowType: 'architecture'
-lastStep: 2
+lastStep: 5
 project_name: 'managercheck'
 user_name: 'ThanhThanhThanh'
 date: '2025-12-05'
@@ -100,4 +100,96 @@ Implement a **team-scoped multi-tenancy architecture** with the following key co
 - Team-scoped foreign keys on all resources (tasks MUST belong to a team)
 - Role stored in junction table (not user table) for multi-role support
 - Composite indexes on `(team_id, status)` for dashboard queries
+
+
+## Architecture Decision: Middleware & Validation Strategy
+
+**Decision Date:** 2025-12-09
+**Status:** Approved
+
+### Context
+
+The codebase currently has decentralized authentication logic (defined within route files) and needs a robust strategy for input validation and error handling to ensure data integrity and security.
+
+### Decision
+
+Implement a **centralized middleware layer** to handle cross-cutting concerns uniformly across all API endpoints.
+
+#### 1. Standardization of Middleware
+Move all inline middleware from route files to dedicated modules in `src/middleware/`:
+- **`auth.js`**: Consolidate `requireAuth`, `requireTeamMembership`, `requireManagerRole`.
+- **`validate.js`**: Use the existing Zod-based validation factory.
+- **`error.js`**: Implement a global error handling middleware to standardize JSON error responses.
+
+#### 2. Validation Pattern
+- **Library:** `zod` (v3.x)
+- **Implementation:**
+  - Create Zod schemas in `src/validators/*.validators.js`.
+  - Apply `validate(schema)` middleware to all POST/PATCH/PUT routes.
+  - Strict typing: Validation must strip unknown keys (`strict()`).
+
+#### 3. Global Error Handling
+Replace ad-hoc `try/catch` blocks in controllers with a centralized error handler that captures:
+- Zod validation errors (400)
+- Authentication/Authorization errors (401/403)
+- Database constraints (409)
+- Unexpected runtime errors (500)
+
+
+## Architecture Decision: Real-Time Communication
+
+**Decision Date:** 2025-12-09
+**Status:** Approved
+
+### Context
+
+The PRD requires immediate updates for task assignments and blocker notifications. HTTP polling is insufficient for the targeted user experience (<500ms latency).
+
+### Decision
+
+Integrate **Socket.io (v4.x)** for real-time bidirectional event-based communication.
+
+#### 1. Connection Strategy
+- **Transport:** WebSocket with polling fallback.
+- **Authentication:** Reuse `better-auth` session cookies. The handshake must validate the session from the `cookie` header before allowing connection.
+
+#### 2. Event Taxonomy
+| Event Name | Direction | Payload | Trigger |
+| :--- | :--- | :--- | :--- |
+| `task:assigned` | Server → Client | `{ taskId, title, assignedBy }` | Manager creates/assigns task |
+| `task:status_changed` | Server → Client | `{ taskId, newStatus, userId }` | Member updates status |
+| `comment:added` | Server → Client | `{ taskId, commentId, text }` | User adds comment |
+| `team:member_added` | Server → Client | `{ teamId, user }` | Manager adds member |
+
+#### 3. Room Strategy (Team Scoping)
+- Clients join rooms based on their Team IDs: `team:{teamId}`.
+- Events are emitted to specific rooms to ensure data privacy and reduce noise.
+- `socket.join('team:' + teamId)` upon successful connection/team selection.
+
+
+## Architecture Decision: Frontend State Management
+
+**Decision Date:** 2025-12-09
+**Status:** Approved
+
+### Context
+
+The frontend handles complex relational data (Teams have Tasks, Tasks have Comments) and needs to sync this state with real-time events.
+
+### Decision
+
+Use **Pinia** with the "Setup Stores" pattern for reactive, modular state management.
+
+#### 1. Store Modules
+- **`useAuthStore`**: User session, profile, and global preferences.
+- **`useTeamStore`**: List of teams, current active team context, and team members.
+- **`useTaskStore`**:
+  - Tasks data normalized by ID.
+  - Computed properties for "My Tasks" vs "Team Tasks".
+  - Actions for CRUD that optimistically update UI before API response.
+- **`useUIStore`**: Toast notifications, active modals, and sidebars.
+
+#### 2. Real-Time Integration
+- Stores will subscribe to Socket.io events.
+- **Action:** On `task:status_changed`, the `useTaskStore` updates the specific task object immediately without refetching the entire list.
 
