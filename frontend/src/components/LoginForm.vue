@@ -18,20 +18,43 @@ import {
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { authClient } from "@/lib/auth-client"
+import { useRouter } from "vue-router"
+import { useToast } from 'vue-toast-notification'
 
+const router = useRouter()
+const toast = useToast()
 const formData = ref({
-  email: 'test@example.com',
-  password: 'password123'
+  email: '',
+  password: ''
 })
+const isLoading = ref(false)
+const error = ref<string | null>(null)
 
 const handleSubmit = async (e: Event) => {
   e.preventDefault()
-  console.log('Login data:', formData.value)
-  // Here you can make API call with the JSON structure
-  // {
-  //   "email": "test@example.com",
-  //   "password": "password123"
-  // }
+  isLoading.value = true
+  error.value = null
+  
+  await authClient.signIn.email({
+    email: formData.value.email,
+    password: formData.value.password,
+    callbackURL: "/dashboard" // or "/"
+  }, {
+    onRequest: () => {
+      isLoading.value = true
+    },
+    onSuccess: () => {
+       console.log('Login successful')
+       toast.success('Login successful')
+       router.push('/dashboard')
+    },
+    onError: (ctx: any) => {
+      error.value = ctx.error.message
+      toast.error(ctx.error.message)
+      isLoading.value = false
+    }
+  })
 }
 
 const props = defineProps<{
@@ -53,6 +76,11 @@ const props = defineProps<{
       <CardContent>
         <form @submit="handleSubmit">
           <FieldGroup>
+            <Field v-if="error">
+                <FieldDescription class="text-red-500 bg-red-50 p-3 rounded">
+                    {{ error }}
+                </FieldDescription>
+            </Field>
             <Field>
               <Button variant="outline" type="button">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -109,12 +137,12 @@ const props = defineProps<{
               />
             </Field>
             <Field>
-              <Button type="submit">
-                Login
+              <Button type="submit" :disabled="isLoading">
+                 {{ isLoading ? 'Logging in...' : 'Login' }}
               </Button>
               <FieldDescription class="text-center">
                 Don't have an account?
-                <a href="#">
+                <a href="/signup">
                   Sign up
                 </a>
               </FieldDescription>

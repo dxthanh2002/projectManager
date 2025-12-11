@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { useForm, useField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useRouter } from "vue-router"
+import { useToast } from 'vue-toast-notification'
 import Button from "@/components/ui/button/Button.vue"
 import {
     Card,
@@ -28,6 +29,7 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
+const toast = useToast()
 const isLoading = ref(false)
 const serverError = ref<string | null>(null)
 
@@ -61,11 +63,13 @@ const onSubmit = handleSubmit(async (data: SignUpFormData) => {
             },
             onSuccess: () => {
                 console.log('Sign up successful')
+                toast.success('Sign up successful! Please login.')
                 router.push('/signin')
             },
             onError: (ctx: any) => {
                 serverError.value = ctx.error.message
                 console.error('Sign up error:', ctx.error.message)
+                toast.error(ctx.error.message)
                 isLoading.value = false
             }
         })
@@ -73,6 +77,7 @@ const onSubmit = handleSubmit(async (data: SignUpFormData) => {
         if (error) {
             serverError.value = error.message
             console.error('Sign up failed:', error)
+            toast.error(error.message)
         } else if (result) {
             console.log('Sign up successful:', result)
             router.push('/signin')
@@ -82,6 +87,7 @@ const onSubmit = handleSubmit(async (data: SignUpFormData) => {
         const serverMsg = error?.message ?? error?.toString() ?? 'Sign up failed'
         serverError.value = serverMsg
         console.error('Error during sign up:', serverMsg)
+        toast.error(serverMsg)
     } finally {
         isLoading.value = false
     }

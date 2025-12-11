@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The backend is a **Node.js REST API server** built with Express 5, using MySQL as the database with Drizzle ORM for type-safe queries. Authentication is handled by the better-auth library for session management. The architecture implements a **team-scoped multi-tenancy model** where all resources (tasks, comments) belong to teams with role-based access control (manager/member).
+The backend is a **Node.js REST API server** built with Express 5, implementing a **strict 100% REST API architecture** for all client-server communication. It uses MySQL as the database with Drizzle ORM for type-safe queries. Authentication is handled by the better-auth library for session management. The architecture implements a **team-scoped multi-tenancy model** where all resources (tasks, comments) belong to teams with role-based access control (manager/member).
 
 ## Technology Stack
 
@@ -298,6 +298,9 @@ pnpm drizzle-kit generate
 
 # Apply migrations
 pnpm drizzle-kit migrate
+
+# Generate new migration and Apply migrations
+pnpm drizzle-kit push
 ```
 
 ## Deployment Architecture

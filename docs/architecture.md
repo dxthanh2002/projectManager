@@ -193,3 +193,34 @@ Use **Pinia** with the "Setup Stores" pattern for reactive, modular state manage
 - Stores will subscribe to Socket.io events.
 - **Action:** On `task:status_changed`, the `useTaskStore` updates the specific task object immediately without refetching the entire list.
 
+
+## Architecture Decision: API Architectural Style
+
+**Decision Date:** 2025-12-09
+**Status:** Approved
+
+### Context
+
+To ensure consistency in communication between the Frontend and Backend, and to simplify integration with external tools or future mobile apps, a unified API style is required.
+
+### Decision
+
+Use **100% REST API** for all client-server communication (excluding real-time event pushes).
+
+#### 1. Protocol Standards
+- **Resource-Oriented URLs:** `/api/resources` naming convention (e.g., `/api/teams`, `/api/tasks`).
+- **Standard HTTP Methods:**
+  - `GET`: Retrieve data
+  - `POST`: Create new resources or trigger complex actions
+  - `PUT`/`PATCH`: Update resources
+  - `DELETE`: Remove resources
+- **Stateless:** The server does not maintain client state between requests (session state is handled via cookies/tokens but logic is stateless).
+
+#### 2. Data Format
+- **Request Body:** JSON (`application/json`)
+- **Response Body:** JSON (`application/json`)
+
+#### 3. Exclusion
+- Real-time updates use **Socket.io** (WebSocket) as a complementary channel for push notifications only. All state-changing actions MUST still go through REST APIs.
+
+

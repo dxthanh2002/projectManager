@@ -5,6 +5,7 @@ import { fromNodeHeaders } from "better-auth/node";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.ts";
 import { db } from "./lib/db.js";
+import { errorHandler } from "./middleware/error.js";
 
 dotenv.config();
 const app = express();
@@ -14,7 +15,7 @@ const PORT = process.env.PORT || 5001;
 // CORS
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "",
+    origin: ["http://localhost:5173"],
     methods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -52,6 +53,9 @@ app.get("/api/me", async (req, res) => {
   });
   return res.json(session);
 });
+
+// Global error handler - MUST be last middleware
+app.use(errorHandler);
 
 if (db) {
   app.listen(PORT, () => {

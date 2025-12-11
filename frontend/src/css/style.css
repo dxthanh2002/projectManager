@@ -124,3 +124,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Force high z-index for toast notifications */
+.v-toast__container {
+  z-index: 9999 !important;
+}

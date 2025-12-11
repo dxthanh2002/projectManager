@@ -44,8 +44,8 @@ story_location: docs/sprint-artifacts
 development_status:
   # Epic 1: Foundation & Authentication
   epic-1: in-progress
-  1-1-backend-middleware-error-handling-strategy: ready-for-dev
-  1-2-user-signup-login-better-auth-integration: backlog
+  1-1-backend-middleware-error-handling-strategy: done
+  1-2-user-signup-login-better-auth-integration: done
   epic-1-retrospective: optional
 
   # Epic 2: Team Management (Multi-Tenancy)

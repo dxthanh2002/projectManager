@@ -18,7 +18,7 @@ This is a **client-server architecture** where the Vue 3 frontend communicates w
 
 ### Frontend (Web Client)
 - **Type:** Single Page Application (SPA)
-- **Tech Stack:** Vue 3, TypeScript, Vite, TailwindCSS
+- **Tech Stack:** Vue 3, TypeScript, Vite, TailwindCSS, vue-toast-notification
 - **Root:** `frontend/`
 - **Port:** 5173 (default, development)
 - **Purpose:** User interface, client-side routing, state management
@@ -64,7 +64,7 @@ sequenceDiagram
 
 ### 2. API Communication
 
-**Type:** REST API over HTTP
+**Type:** 100% REST API over HTTP
 
 **Protocol:** JSON over HTTP/HTTPS  
 **Client:** axios (v1.13.2)  
@@ -221,7 +221,7 @@ cors({
 
 ### Error Handling
 - **Backend:** Express error middleware (to be implemented)
-- **Frontend:** axios interceptors (to be implemented)
+- **Frontend:** axios interceptors + `vue-toast-notification` for valid user feedback
 - **Expected:** Consistent error response format
 
 ## Environment Configuration

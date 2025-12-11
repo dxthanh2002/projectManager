@@ -2,68 +2,10 @@ import { Router } from 'express';
 import { db } from '../lib/db.js';
 import { team, userTeam } from '../schema/index.ts';
 import { eq, and, sql } from 'drizzle-orm';
-import { auth } from '../lib/auth.ts';
-import { fromNodeHeaders } from 'better-auth/node';
 import { randomUUID } from 'crypto';
+import { requireAuth, requireTeamMembership, requireManagerRole } from '../middleware/auth.js';
 
 const router = Router();
-
-/**
- * Middleware: Require authentication
- */
-async function requireAuth(req, res, next) {
-    const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-    });
-
-    if (!session?.user) {
-        return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Authentication required' });
-    }
-
-    req.user = session.user;
-    next();
-}
-
-/**
- * Middleware: Require team membership
- */
-async function requireTeamMembership(req, res, next) {
-    const { teamId } = req.params;
-    const userId = req.user.id;
-
-    const membership = await db
-        .select()
-        .from(userTeam)
-        .where(and(
-            eq(userTeam.teamId, teamId),
-            eq(userTeam.userId, userId)
-        ))
-        .limit(1);
-
-    if (!membership[0]) {
-        return res.status(403).json({
-            error: 'FORBIDDEN',
-            message: 'Not a team member'
-        });
-    }
-
-    req.teamRole = membership[0].role;
-    req.teamId = teamId;
-    next();
-}
-
-/**
- * Middleware: Require manager role
- */
-function requireManagerRole(req, res, next) {
-    if (req.teamRole !== 'manager') {
-        return res.status(403).json({
-            error: 'FORBIDDEN',
-            message: 'Manager role required'
-        });
-    }
-    next();
-}
 
 // ============================================
 // Team Routes
