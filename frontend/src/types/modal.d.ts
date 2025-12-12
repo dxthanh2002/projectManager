@@ -10,22 +10,8 @@ declare global {
         statusCode: number | string;
         data?: T;
     }
-    interface IRegister {
-        _id: string;
+    interface ITeam {
+        name: string;
+        description: string | null;
     }
-    interface IUserLogin {
-        user: {
-            email: string;
-            _id: string;
-            name: string;
-            role: string;
-            address: any;
-            avatar: string;
-            phone: string;
-        }
-        access_token: string;
-    }
-
-
-
 }

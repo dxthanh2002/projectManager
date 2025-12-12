@@ -4,6 +4,8 @@ import { team, userTeam } from '../schema/index.ts';
 import { eq, and, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { requireAuth, requireTeamMembership, requireManagerRole } from '../middleware/auth.js';
+import { validate } from '../middleware/validate.js';
+import { createTeamSchema, updateTeamSchema, teamIdParamSchema } from '../validators/team.validators.ts';
 
 const router = Router();
 
@@ -16,18 +18,10 @@ const router = Router();
  * Create a new team
  * - User automatically becomes manager
  */
-router.post('/teams', requireAuth, async (req, res) => {
+router.post('/teams', requireAuth, validate(createTeamSchema), async (req, res) => {
     try {
         const { name, description } = req.body;
         const userId = req.user.id;
-
-        // Validation
-        if (!name || name.trim().length === 0) {
-            return res.status(400).json({
-                error: 'VALIDATION_ERROR',
-                message: 'Team name is required'
-            });
-        }
 
         // 1. Create team
         const teamId = randomUUID();
@@ -108,7 +102,7 @@ router.get('/teams', requireAuth, async (req, res) => {
  * GET /api/teams/:teamId
  * Get team details
  */
-router.get('/teams/:teamId', requireAuth, requireTeamMembership, async (req, res) => {
+router.get('/teams/:teamId', requireAuth, validate(teamIdParamSchema), requireTeamMembership, async (req, res) => {
     try {
         const { teamId } = req.params;
 
@@ -140,7 +134,7 @@ router.get('/teams/:teamId', requireAuth, requireTeamMembership, async (req, res
  * PATCH /api/teams/:teamId
  * Update team details (manager only)
  */
-router.patch('/teams/:teamId', requireAuth, requireTeamMembership, requireManagerRole, async (req, res) => {
+router.patch('/teams/:teamId', requireAuth, validate(updateTeamSchema), requireTeamMembership, requireManagerRole, async (req, res) => {
     try {
         const { teamId } = req.params;
         const { name, description } = req.body;
@@ -148,10 +142,6 @@ router.patch('/teams/:teamId', requireAuth, requireTeamMembership, requireManage
         const updates = {};
         if (name !== undefined) updates.name = name.trim();
         if (description !== undefined) updates.description = description?.trim() || null;
-
-        if (Object.keys(updates).length === 0) {
-            return res.status(400).json({ error: 'VALIDATION_ERROR', message: 'No fields to update' });
-        }
 
         await db.update(team).set(updates).where(eq(team.id, teamId));
 

@@ -7,7 +7,6 @@ import { authClient } from "@/lib/auth-client";
 const About = () => import("@/views/About.vue");
 // const Detail = () => import("../views/Detail.vue");
 const Main = () => import("@/views/Main.vue");
-const NotFound = () => import("@/views/NotFound.vue");
 const SignIn = () => import("@/views/Auth/SignInPage.vue");
 const SignUp = () => import("@/views/Auth/SignUpPage.vue");
 const Welcome = () => import("@/views/Auth/Welcome.vue");
@@ -49,9 +48,17 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: "/notfound",
-    name: "Notfound",
-    component: NotFound,
+    path: "/teams/create",
+    name: "CreateTeam",
+    component: () => import("@/views/Teams/CreateTeamPage.vue"),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/teams/:teamId",
+    name: "TeamDetails",
+    // Placeholder for now, can point to a Dashboard or List view
+    component: () => import("@/views/Main.vue"),
+    meta: { requiresAuth: true }
   },
 ];
 

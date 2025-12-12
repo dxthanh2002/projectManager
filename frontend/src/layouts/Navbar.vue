@@ -85,6 +85,10 @@ async function handleLogout() {
                                         class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Settings</a>
                                 </li>
                                 <li>
+                                    <RouterLink to="/teams/create"
+                                        class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Create Team</RouterLink>
+                                </li>
+                                <li>
                                     <button @click="handleLogout"
                                         class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded text-left">Sign
                                         out</button>

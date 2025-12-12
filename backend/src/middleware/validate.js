@@ -21,9 +21,10 @@ export function validate(schema) {
             });
 
             // Replace request data with validated data
-            req.body = validated.body || req.body;
-            req.query = validated.query || req.query;
-            req.params = validated.params || req.params;
+            // Replace request data with validated data if present in schema
+            if ('body' in validated) req.body = validated.body;
+            if ('query' in validated) req.query = validated.query;
+            if ('params' in validated) req.params = validated.params;
 
             next();
         } catch (error) {
@@ -46,6 +47,8 @@ export function validate(schema) {
             return res.status(500).json({
                 error: 'INTERNAL_ERROR',
                 message: 'An unexpected error occurred during validation',
+                debug: error.message,
+                stack: error.stack
             });
         }
     };

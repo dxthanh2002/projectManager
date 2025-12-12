@@ -50,7 +50,7 @@ development_status:
 
   # Epic 2: Team Management (Multi-Tenancy)
   epic-2: backlog
-  2-1-team-creation-manager-promotion: backlog
+  2-1-team-creation-manager-promotion: done
   2-2-member-invitation-management: backlog
   epic-2-retrospective: optional
 
