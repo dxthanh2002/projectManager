@@ -47,6 +47,7 @@ declare global {
         title: string;
         description?: string | null;
         priority?: 'low' | 'medium' | 'high';
+        status?: 'todo' | 'in_progress' | 'done' | 'blocked';
         dueDate?: string | null;
         assigneeId?: string | null;
     }

@@ -29,7 +29,7 @@ const goToCreateTeam = () => {
 }
 
 const selectTeam = (teamId: string) => {
-  router.push(`/teams/${teamId}`)
+  router.push(`/teams/${teamId}/tasks`)
 }
 </script>
 

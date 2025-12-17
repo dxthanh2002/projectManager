@@ -3,7 +3,6 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTeamStore } from '@/store/useTeamStore'
 import { useTaskStore } from '@/store/useTaskStore'
-import { authClient } from '@/lib/auth-client'
 import SidebarApp from '@/layouts/SiderBarApp.vue'
 import {
   Card,
@@ -32,7 +31,7 @@ const route = useRoute()
 const router = useRouter()
 const teamStore = useTeamStore()
 const taskStore = useTaskStore()
-const session = authClient.useSession()
+
 
 const teamId = computed(() => route.params.teamId as string)
 const tasks = computed(() => taskStore.getTasksByTeam(teamId.value))
@@ -40,7 +39,6 @@ const currentTeam = computed(() => teamStore.currentTeam)
 const isLoading = computed(() => taskStore.isLoading || teamStore.isLoading)
 const isManager = computed(() => currentTeam.value?.role === 'manager')
 const members = computed(() => teamStore.members[teamId.value] || [])
-const currentUserId = computed(() => session.value?.data?.user?.id || null)
 
 // Create task modal state
 const showCreateModal = ref(false)
@@ -59,7 +57,6 @@ const selectedTask = ref<ITask | null>(null)
 // Filter state
 const statusFilter = ref('')
 const priorityFilter = ref('')
-const myTasksOnly = ref(false)
 
 onMounted(async () => {
   await Promise.all([
@@ -70,11 +67,10 @@ onMounted(async () => {
 })
 
 // Watch for filter changes
-watch([statusFilter, priorityFilter, myTasksOnly], () => {
+watch([statusFilter, priorityFilter], () => {
   const filters: any = {}
   if (statusFilter.value) filters.status = statusFilter.value
   if (priorityFilter.value) filters.priority = priorityFilter.value
-  if (myTasksOnly.value && currentUserId.value) filters.assigneeId = currentUserId.value
   taskStore.fetchTasks(teamId.value, filters)
 })
 
@@ -131,10 +127,11 @@ const closeTaskDetail = () => {
 // Edit mode state
 const isEditMode = ref(false)
 const isUpdating = ref(false)
-const editTask = ref<ICreateTask>({
+const editTask = ref<any>({
   title: '',
   description: '',
   priority: 'medium',
+  status: 'todo',
   dueDate: null,
   assigneeId: null,
 })
@@ -149,6 +146,7 @@ const openEditMode = () => {
     title: selectedTask.value.title,
     description: selectedTask.value.description || '',
     priority: selectedTask.value.priority,
+    status: selectedTask.value.status,
     dueDate: selectedTask.value.dueDate,
     assigneeId: selectedTask.value.assigneeId,
   }
@@ -168,6 +166,7 @@ const handleUpdateTask = async () => {
       title: editTask.value.title.trim(),
       description: editTask.value.description?.trim() || null,
       priority: editTask.value.priority,
+      status: editTask.value.status,
       dueDate: editTask.value.dueDate || null,
       assigneeId: editTask.value.assigneeId || null,
     })
@@ -268,14 +267,7 @@ const getPriorityColor = (priority: string) => {
 
       <!-- Filters -->
       <div class="flex gap-4 flex-wrap items-center">
-        <label class="flex items-center gap-2 text-sm cursor-pointer">
-          <input 
-            type="checkbox" 
-            v-model="myTasksOnly"
-            class="rounded border-gray-300"
-          />
-          <span>My Tasks Only</span>
-        </label>
+
         <select 
           v-model="statusFilter" 
           class="px-3 py-2 border rounded-md bg-background text-sm"
@@ -507,7 +499,7 @@ const getPriorityColor = (priority: string) => {
                   <Button v-if="isManager" variant="outline" @click="openEditMode">
                     Edit
                   </Button>
-                  <Button v-if="isManager" variant="destructive" @click="showDeleteConfirm = true">
+                  <Button v-if="isManager" variant="destructive" @click="showDeleteConfirm = true" class="text-white">
                     Delete
                   </Button>
                 </div>
@@ -520,7 +512,7 @@ const getPriorityColor = (priority: string) => {
               <div v-if="showDeleteConfirm" class="p-4 bg-destructive/10 rounded-lg">
                 <p class="text-sm font-medium mb-3">Are you sure you want to delete this task?</p>
                 <div class="flex gap-2">
-                  <Button variant="destructive" size="sm" @click="handleDeleteTask" :disabled="isDeleting">
+                  <Button variant="destructive" size="sm" @click="handleDeleteTask" :disabled="isDeleting" class="text-white">
                     <Loader2 v-if="isDeleting" class="mr-2 h-4 w-4 animate-spin" />
                     Yes, Delete
                   </Button>
@@ -556,6 +548,20 @@ const getPriorityColor = (priority: string) => {
 
                 <div class="grid grid-cols-2 gap-4">
                   <div class="space-y-2">
+                    <label class="text-sm font-medium">Status</label>
+                    <select 
+                      v-model="editTask.status"
+                      class="w-full px-3 py-2 border rounded-md bg-background text-sm"
+                      :disabled="isUpdating"
+                    >
+                      <option value="todo">To Do</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="done">Done</option>
+                      <option value="blocked">Blocked</option>
+                    </select>
+                  </div>
+
+                  <div class="space-y-2">
                     <label class="text-sm font-medium">Priority</label>
                     <select 
                       v-model="editTask.priority"
@@ -567,7 +573,9 @@ const getPriorityColor = (priority: string) => {
                       <option value="high">High</option>
                     </select>
                   </div>
+                </div>
 
+                <div class="grid grid-cols-2 gap-4">
                   <div class="space-y-2">
                     <label class="text-sm font-medium">Due Date</label>
                     <input 
@@ -577,20 +585,20 @@ const getPriorityColor = (priority: string) => {
                       :disabled="isUpdating"
                     />
                   </div>
-                </div>
-
-                <div class="space-y-2">
-                  <label class="text-sm font-medium">Assignee</label>
-                  <select 
-                    v-model="editTask.assigneeId"
-                    class="w-full px-3 py-2 border rounded-md bg-background text-sm"
-                    :disabled="isUpdating"
-                  >
-                    <option :value="null">Unassigned</option>
-                    <option v-for="member in members" :key="member.id" :value="member.id">
-                      {{ member.name }} ({{ member.email }})
-                    </option>
-                  </select>
+                  
+                  <div class="space-y-2">
+                    <label class="text-sm font-medium">Assignee</label>
+                    <select 
+                      v-model="editTask.assigneeId"
+                      class="w-full px-3 py-2 border rounded-md bg-background text-sm"
+                      :disabled="isUpdating"
+                    >
+                      <option :value="null">Unassigned</option>
+                      <option v-for="member in members" :key="member.id" :value="member.id">
+                        {{ member.name }} ({{ member.email }})
+                      </option>
+                    </select>
+                  </div>
                 </div>
 
                 <div class="flex gap-2 justify-end pt-4">
