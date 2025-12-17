@@ -48,6 +48,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/dashboard",
+    name: "Dashboard",
+    component: () => import("@/views/DashboardView.vue"),
+    meta: { requiresAuth: true }
+  },
+  {
     path: "/teams/create",
     name: "CreateTeam",
     component: () => import("@/views/Teams/CreateTeamPage.vue"),
@@ -60,6 +66,18 @@ const routes = [
     component: () => import("@/views/Main.vue"),
     meta: { requiresAuth: true }
   },
+  {
+    path: "/teams/:teamId/members",
+    name: "TeamMembers",
+    component: () => import("@/views/TeamMembersView.vue"),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/teams/:teamId/tasks",
+    name: "TeamTasks",
+    component: () => import("@/views/TaskListView.vue"),
+    meta: { requiresAuth: true }
+  },
 ];
 
 const router = createRouter({
@@ -68,23 +86,40 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
+  // Skip auth check if navigating to non-protected routes
+  if (!to.meta.requiresAuth && !to.meta.guestOnly) {
+    next();
+    return;
+  }
+
   try {
     const { data: session } = await authClient.getSession();
 
-    if (to.meta.requiresAuth && !session) {
-      next('/signin');
-    } else if (to.meta.guestOnly && session) {
-      next('/');
+    if (to.meta.requiresAuth) {
+      if (session) {
+        next();
+      } else {
+        // Only redirect to signin if we're certain there's no session
+        next('/signin');
+      }
+    } else if (to.meta.guestOnly) {
+      if (session) {
+        next('/dashboard');
+      } else {
+        next();
+      }
     } else {
       next();
     }
   } catch (error) {
     console.error("Auth Guard Error:", error);
-    // On error, allow navigation but maybe to a safe page or just proceed?
-    // Safe default: process as if no session
-    if (to.meta.requiresAuth) {
-      next('/signin');
+    // On error, be more permissive - allow navigation to protected routes
+    // The API will handle unauthorized access with 401 responses
+    if (to.meta.guestOnly) {
+      // If going to guest-only page and error checking session, allow it
+      next();
     } else {
+      // For protected routes, allow navigation - let the API handle auth
       next();
     }
   }

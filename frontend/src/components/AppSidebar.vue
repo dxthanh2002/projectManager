@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { SidebarProps } from "@/components/ui/sidebar/"
+import { onMounted, computed } from 'vue'
+import { useTeamStore } from '@/store/useTeamStore'
 
 import {
   AudioWaveform,
   BookOpen,
   Bot,
-  Command,
   Frame,
   GalleryVerticalEnd,
   Map,
@@ -30,30 +31,27 @@ const props = withDefaults(defineProps<SidebarProps>(), {
   collapsible: "icon",
 })
 
-// This is sample data.
+const teamStore = useTeamStore()
+
+onMounted(async () => {
+  await teamStore.fetchTeams()
+})
+
+// Map real teams to TeamSwitcher format
+const teams = computed(() => {
+  return teamStore.teams.map(team => ({
+    name: team.name,
+    logo: team.role === 'manager' ? GalleryVerticalEnd : AudioWaveform,
+    plan: team.role === 'manager' ? 'Manager' : 'Member',
+  }))
+})
+
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
   navMain: [
     {
       title: "Playground",
@@ -164,7 +162,7 @@ const data = {
 <template>
   <Sidebar v-bind="props">
     <SidebarHeader>
-      <TeamSwitcher :teams="data.teams" />
+      <TeamSwitcher :teams="teams" />
     </SidebarHeader>
     <SidebarContent>
       <NavMain :items="data.navMain" />

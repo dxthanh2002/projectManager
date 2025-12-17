@@ -1,9 +1,12 @@
 import { Router } from 'express';
 import { db } from '../lib/db.js';
-import { userTeam, user } from '../schema/index.ts';
+import { userTeam } from '../schema/index.ts';
+import { user } from '../schema/auth.ts';
 import { eq, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
-import { requireAuth, requireTeamMembership, requireManagerRole } from './teams.js';
+import { requireAuth, requireTeamMembership, requireManagerRole } from '../middleware/auth.js';
+import { validate } from '../middleware/validate.js';
+import { addMemberSchema } from '../validators/team.validators.ts';
 
 const router = Router();
 
@@ -40,7 +43,7 @@ router.get('/teams/:teamId/members', requireAuth, requireTeamMembership, async (
  * Add a member to the team (manager only)
  * - Requires email or userId
  */
-router.post('/teams/:teamId/members', requireAuth, requireTeamMembership, requireManagerRole, async (req, res) => {
+router.post('/teams/:teamId/members', requireAuth, requireTeamMembership, requireManagerRole, validate(addMemberSchema), async (req, res) => {
     try {
         const { teamId } = req.params;
         const { email, userId } = req.body;
@@ -86,11 +89,13 @@ router.post('/teams/:teamId/members', requireAuth, requireTeamMembership, requir
         }
 
         // 3. Add as member
+        const joinedAt = new Date();
         await db.insert(userTeam).values({
             id: randomUUID(),
             userId: targetUser[0].id,
             teamId: teamId,
             role: 'member',
+            joinedAt: joinedAt,
         });
 
         res.status(201).json({
@@ -99,7 +104,8 @@ router.post('/teams/:teamId/members', requireAuth, requireTeamMembership, requir
                 id: targetUser[0].id,
                 name: targetUser[0].name,
                 email: targetUser[0].email,
-                role: 'member'
+                role: 'member',
+                joinedAt: joinedAt.toISOString()
             }
         });
     } catch (error) {
@@ -158,7 +164,7 @@ router.delete('/teams/:teamId/members/:userId', requireAuth, requireTeamMembersh
             eq(userTeam.userId, userId)
         ));
 
-        res.json({ message: 'Member removed successfully' });
+        res.status(204).send();
     } catch (error) {
         console.error('Error removing team member:', error);
         res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to remove team member' });

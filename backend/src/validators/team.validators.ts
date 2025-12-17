@@ -22,3 +22,12 @@ export const teamIdParamSchema = z.object({
         teamId: z.string().uuid("Invalid team ID"),
     }),
 });
+
+export const addMemberSchema = z.object({
+    body: z.object({
+        email: z.string().email("Invalid email format"),
+    }),
+    params: z.object({
+        teamId: z.string().uuid("Invalid team ID"),
+    }),
+});

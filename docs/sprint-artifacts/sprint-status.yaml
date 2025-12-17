@@ -49,16 +49,16 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Team Management (Multi-Tenancy)
-  epic-2: backlog
+  epic-2: in-progress
   2-1-team-creation-manager-promotion: done
-  2-2-member-invitation-management: backlog
+  2-2-member-invitation-management: done
   epic-2-retrospective: optional
 
   # Epic 3: Task Management Core
-  epic-3: backlog
-  3-1-task-creation-manager: backlog
-  3-2-my-tasks-view-details-member: backlog
-  3-3-task-updates-deletion: backlog
+  epic-3: in-progress
+  3-1-task-creation-manager: done
+  3-2-my-tasks-view-details-member: done
+  3-3-task-updates-deletion: in-progress
   epic-3-retrospective: optional
 
   # Epic 4: Workflow & Real-Time Collaboration

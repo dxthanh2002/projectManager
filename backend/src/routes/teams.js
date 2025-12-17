@@ -80,7 +80,7 @@ router.get('/teams', requireAuth, async (req, res) => {
                 description: team.description,
                 role: userTeam.role,
                 createdAt: team.createdAt,
-                memberCount: sql < number > `COUNT(DISTINCT ut2.user_id)`,
+                memberCount: sql`COUNT(DISTINCT ut2.user_id)`,
             })
             .from(userTeam)
             .innerJoin(team, eq(userTeam.teamId, team.id))

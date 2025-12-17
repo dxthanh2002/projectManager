@@ -77,8 +77,8 @@ async function handleLogout() {
                             class="absolute right-0 z-10 bg-neutral-primary-medium border border-default-medium rounded-base shadow-lg w-44 mt-2">
                             <ul class="p-2 text-sm text-body font-medium">
                                 <li>
-                                    <a href="#"
-                                        class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Dashboard</a>
+                                    <RouterLink to="/dashboard"
+                                        class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded">Dashboard</RouterLink>
                                 </li>
                                 <li>
                                     <a href="#"
