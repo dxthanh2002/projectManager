@@ -42,9 +42,9 @@ export const useTeamStore = defineStore('team', {
         async createTeam(data: { name: string; description?: string }) {
             this.isLoading = true;
             try {
-                const response = await createTeamAPI(data.name, data.description);
-                if (response.data) {
-                    const newTeam = response.data;
+                // axios interceptor returns response.data directly
+                const newTeam = await createTeamAPI(data.name, data.description) as unknown as ITeam;
+                if (newTeam) {
                     this.teams.push(newTeam);
                     this.currentTeam = newTeam;
 

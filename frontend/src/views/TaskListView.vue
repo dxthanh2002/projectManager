@@ -3,6 +3,8 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTeamStore } from '@/store/useTeamStore'
 import { useTaskStore } from '@/store/useTaskStore'
+import { authClient } from '@/lib/auth-client'
+import CommentList from '@/components/comments/CommentList.vue'
 import SidebarApp from '@/layouts/SiderBarApp.vue'
 import {
   Card,
@@ -14,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { useToast } from 'vue-toast-notification'
 import { 
   ListTodo, 
   Plus, 
@@ -39,6 +42,19 @@ const currentTeam = computed(() => teamStore.currentTeam)
 const isLoading = computed(() => taskStore.isLoading || teamStore.isLoading)
 const isManager = computed(() => currentTeam.value?.role === 'manager')
 const members = computed(() => teamStore.members[teamId.value] || [])
+
+// Get current user session for assignee check
+const session = authClient.useSession()
+const currentUserId = computed(() => session.value?.data?.user?.id || null)
+
+// Check if current user is the assignee of selected task
+const isAssignee = computed(() => {
+  if (!selectedTask.value || !currentUserId.value) return false
+  return selectedTask.value.assigneeId === currentUserId.value
+})
+
+// Can edit task: manager or assignee
+const canEditTask = computed(() => isManager.value || isAssignee.value)
 
 // Create task modal state
 const showCreateModal = ref(false)
@@ -134,6 +150,7 @@ const editTask = ref<any>({
   status: 'todo',
   dueDate: null,
   assigneeId: null,
+  blockerComment: '', // Comment required when status = blocked
 })
 
 // Delete confirmation state
@@ -149,6 +166,7 @@ const openEditMode = () => {
     status: selectedTask.value.status,
     dueDate: selectedTask.value.dueDate,
     assigneeId: selectedTask.value.assigneeId,
+    blockerComment: '', // Reset comment
   }
   isEditMode.value = true
 }
@@ -160,8 +178,26 @@ const cancelEdit = () => {
 const handleUpdateTask = async () => {
   if (!selectedTask.value || !editTask.value.title.trim()) return
   
+  // Blocker validation: require comment when status = blocked
+  if (editTask.value.status === 'blocked' && !editTask.value.blockerComment?.trim()) {
+    const toast = useToast()
+    toast.error('Comment is required when marking task as blocked')
+    return
+  }
+  
   isUpdating.value = true
   try {
+    // If status changed to blocked, use status endpoint with comment
+    if (editTask.value.status === 'blocked' && selectedTask.value.status !== 'blocked') {
+      await taskStore.updateTaskStatus(
+        teamId.value, 
+        selectedTask.value.id, 
+        editTask.value.status,
+        editTask.value.blockerComment?.trim()
+      )
+    }
+    
+    // Update other task fields
     await taskStore.updateTask(teamId.value, selectedTask.value.id, {
       title: editTask.value.title.trim(),
       description: editTask.value.description?.trim() || null,
@@ -320,7 +356,7 @@ const getPriorityColor = (priority: string) => {
           <CardHeader class="pb-2">
             <div class="flex items-start justify-between gap-2">
               <CardTitle class="text-lg line-clamp-2">{{ task.title }}</CardTitle>
-              <Badge :variant="getStatusColor(task.status)" class="shrink-0">
+              <Badge :variant="getStatusColor(task.status)" :class="['shrink-0', task.status === 'blocked' ? 'text-white' : '']">
                 <component :is="getStatusIcon(task.status)" class="h-3 w-3 mr-1" />
                 {{ task.status.replace('_', ' ') }}
               </Badge>
@@ -331,7 +367,7 @@ const getPriorityColor = (priority: string) => {
           </CardHeader>
           <CardContent>
             <div class="flex flex-wrap gap-2 mb-3">
-              <Badge :variant="getPriorityColor(task.priority)" class="text-xs">
+              <Badge :variant="getPriorityColor(task.priority)" :class="['text-xs', task.priority === 'high' ? 'text-white' : '']">
                 {{ task.priority }}
               </Badge>
             </div>
@@ -449,11 +485,11 @@ const getPriorityColor = (priority: string) => {
               <div class="flex-1">
                 <CardTitle class="text-xl">{{ selectedTask.title }}</CardTitle>
                 <div class="flex gap-2 mt-2">
-                  <Badge :variant="getStatusColor(selectedTask.status)">
+                  <Badge :variant="getStatusColor(selectedTask.status)" :class="selectedTask.status === 'blocked' ? 'text-white' : ''">
                     <component :is="getStatusIcon(selectedTask.status)" class="h-3 w-3 mr-1" />
                     {{ selectedTask.status.replace('_', ' ') }}
                   </Badge>
-                  <Badge :variant="getPriorityColor(selectedTask.priority)">
+                  <Badge :variant="getPriorityColor(selectedTask.priority)" :class="selectedTask.priority === 'high' ? 'text-white' : ''">
                     {{ selectedTask.priority }}
                   </Badge>
                 </div>
@@ -493,10 +529,18 @@ const getPriorityColor = (priority: string) => {
                 <span class="text-sm">{{ formatDateTime(selectedTask.createdAt) }}</span>
               </div>
 
+              <!-- Comments Section -->
+              <div class="border-t pt-4 mt-4">
+                <CommentList 
+                  :task-id="selectedTask.id" 
+                  :is-manager="isManager" 
+                />
+              </div>
+
               <!-- Action Buttons -->
               <div class="flex justify-between pt-2">
                 <div class="flex gap-2">
-                  <Button v-if="isManager" variant="outline" @click="openEditMode">
+                  <Button v-if="canEditTask" variant="outline" @click="openEditMode">
                     Edit
                   </Button>
                   <Button v-if="isManager" variant="destructive" @click="showDeleteConfirm = true" class="text-white">
@@ -573,6 +617,19 @@ const getPriorityColor = (priority: string) => {
                       <option value="high">High</option>
                     </select>
                   </div>
+                </div>
+
+                <!-- Blocker Comment (required when status = blocked) -->
+                <div v-if="editTask.status === 'blocked'" class="space-y-2 p-3 border border-destructive/30 rounded-lg bg-destructive/5">
+                  <label class="text-sm font-medium text-destructive">Blocker Comment *</label>
+                  <textarea 
+                    v-model="editTask.blockerComment"
+                    placeholder="Explain why this task is blocked..."
+                    class="w-full px-3 py-2 border border-destructive/30 rounded-md bg-background text-sm min-h-[80px] resize-none"
+                    :disabled="isUpdating"
+                    required
+                  ></textarea>
+                  <p class="text-xs text-muted-foreground">A comment is required when marking a task as blocked.</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">

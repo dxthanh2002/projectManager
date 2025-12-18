@@ -51,4 +51,18 @@ declare global {
         dueDate?: string | null;
         assigneeId?: string | null;
     }
+
+    interface IComment {
+        id: string;
+        content: string;
+        taskId: string;
+        userId: string;
+        createdAt: string;
+        updatedAt?: string;
+        author: {
+            id: string;
+            name: string;
+            email: string;
+        };
+    }
 }

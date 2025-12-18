@@ -55,17 +55,17 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Task Management Core
-  epic-3: in-progress
+  epic-3: done
   3-1-task-creation-manager: done
   3-2-my-tasks-view-details-member: done
-  3-3-task-updates-deletion: in-progress
+  3-3-task-updates-deletion: done
   epic-3-retrospective: optional
 
   # Epic 4: Workflow & Real-Time Collaboration
-  epic-4: backlog
-  4-1-status-transitions-blocker-validation: backlog
-  4-2-comments-system: backlog
-  4-3-real-time-notifications-socket-io: backlog
+  epic-4: in-progress
+  4-1-status-transitions-blocker-validation: done
+  4-2-comments-system: done
+  4-3-real-time-notifications-socket-io: ready-for-dev
   epic-4-retrospective: optional
 
   # Epic 5: Smart Dashboards

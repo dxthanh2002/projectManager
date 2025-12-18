@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { useToast } from 'vue-toast-notification';
-import { fetchTeamTasksAPI, createTaskAPI, updateTaskAPI, deleteTaskAPI } from '@/services/api';
+import { fetchTeamTasksAPI, createTaskAPI, updateTaskAPI, deleteTaskAPI, updateTaskStatusAPI } from '@/services/api';
 
 export const useTaskStore = defineStore('task', {
     state: () => ({
@@ -89,6 +89,39 @@ export const useTaskStore = defineStore('task', {
                     toast.error("Task not found");
                 } else {
                     toast.error("Failed to update task");
+                }
+                throw error;
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        async updateTaskStatus(teamId: string, taskId: string, status: string, comment?: string) {
+            this.isLoading = true;
+            try {
+                await updateTaskStatusAPI(taskId, status, comment);
+                const toast = useToast();
+                if (status === 'blocked') {
+                    toast.success('Task marked as blocked');
+                } else if (status === 'done') {
+                    toast.success('Task marked as done');
+                } else {
+                    toast.success('Task status updated');
+                }
+                // Refresh task list
+                await this.fetchTasks(teamId);
+            } catch (error: any) {
+                console.error("Error updating task status:", error);
+                const toast = useToast();
+                const errStatus = error.response?.status;
+                if (errStatus === 400) {
+                    toast.error(error.response?.data?.message || "Validation error");
+                } else if (errStatus === 403) {
+                    toast.error("Only assignee or manager can update status");
+                } else if (errStatus === 404) {
+                    toast.error("Task not found");
+                } else {
+                    toast.error("Failed to update task status");
                 }
                 throw error;
             } finally {

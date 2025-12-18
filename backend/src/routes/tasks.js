@@ -201,7 +201,7 @@ router.get('/tasks/:id', requireAuth, async (req, res) => {
 router.patch('/tasks/:id', requireAuth, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, priority, dueDate, assigneeId } = req.body;
+        const { title, description, priority, status, dueDate, assigneeId } = req.body;
         const userId = req.user.id;
 
         // Get task with team membership and role check
@@ -257,7 +257,11 @@ router.patch('/tasks/:id', requireAuth, async (req, res) => {
         if (title !== undefined) updates.title = title.trim();
         if (description !== undefined) updates.description = description?.trim() || null;
         if (priority !== undefined) updates.priority = priority;
-        if (dueDate !== undefined) updates.dueDate = dueDate;
+        if (status !== undefined) updates.status = status;
+        if (dueDate !== undefined) {
+            // Convert ISO date string to MySQL DATE format (YYYY-MM-DD)
+            updates.dueDate = dueDate ? dueDate.split('T')[0] : null;
+        }
         if (assigneeId !== undefined) updates.assigneeId = assigneeId;
 
         if (Object.keys(updates).length === 0) {
