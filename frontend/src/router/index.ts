@@ -76,7 +76,7 @@ const routes = [
     path: "/teams/:teamId/tasks",
     name: "TeamTasks",
     component: () => import("@/views/TaskListView.vue"),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, fullWidth: true }
   },
 ];
 

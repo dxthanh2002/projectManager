@@ -51,11 +51,8 @@ const isFullWidth = computed(() => route.meta?.fullWidth === true);
   <!-- Notification Toast Container -->
   <NotificationToast />
 
-  <!-- Full Width Layout (Dashboard) -->
+  <!-- Full Width Layout (Dashboard, TaskList) - no Navbar -->
   <div v-if="isFullWidth" class="min-h-screen">
-    <div class="max-w-7xl mx-auto px-4 py-4">
-      <Navbar />
-    </div>
     <RouterView />
   </div>
 
