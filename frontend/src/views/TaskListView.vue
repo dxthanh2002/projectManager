@@ -73,6 +73,7 @@ const selectedTask = ref<ITask | null>(null)
 // Filter state
 const statusFilter = ref('')
 const priorityFilter = ref('')
+const assigneeFilter = ref('')
 
 onMounted(async () => {
   await Promise.all([
@@ -83,10 +84,11 @@ onMounted(async () => {
 })
 
 // Watch for filter changes
-watch([statusFilter, priorityFilter], () => {
+watch([statusFilter, priorityFilter, assigneeFilter], () => {
   const filters: any = {}
   if (statusFilter.value) filters.status = statusFilter.value
   if (priorityFilter.value) filters.priority = priorityFilter.value
+  if (assigneeFilter.value) filters.assigneeId = assigneeFilter.value
   taskStore.fetchTasks(teamId.value, filters)
 })
 
@@ -322,6 +324,15 @@ const getPriorityColor = (priority: string) => {
           <option value="high">High</option>
           <option value="medium">Medium</option>
           <option value="low">Low</option>
+        </select>
+        <select 
+          v-model="assigneeFilter" 
+          class="px-3 py-2 border rounded-md bg-background text-sm"
+        >
+          <option value="">All Members</option>
+          <option v-for="member in members" :key="member.id" :value="member.id">
+            {{ member.name }}
+          </option>
         </select>
       </div>
 

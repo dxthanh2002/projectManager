@@ -43,13 +43,13 @@ story_location: docs/sprint-artifacts
 
 development_status:
   # Epic 1: Foundation & Authentication
-  epic-1: in-progress
+  epic-1: done
   1-1-backend-middleware-error-handling-strategy: done
   1-2-user-signup-login-better-auth-integration: done
   epic-1-retrospective: optional
 
   # Epic 2: Team Management (Multi-Tenancy)
-  epic-2: in-progress
+  epic-2: done
   2-1-team-creation-manager-promotion: done
   2-2-member-invitation-management: done
   epic-2-retrospective: optional
@@ -62,13 +62,13 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Workflow & Real-Time Collaboration
-  epic-4: in-progress
+  epic-4: done
   4-1-status-transitions-blocker-validation: done
   4-2-comments-system: done
-  4-3-real-time-notifications-socket-io: ready-for-dev
+  4-3-real-time-notifications-socket-io: done
   epic-4-retrospective: optional
 
   # Epic 5: Smart Dashboards
-  epic-5: backlog
-  5-1-manager-dashboard-filtering: backlog
+  epic-5: done
+  5-1-manager-dashboard-filtering: done
   epic-5-retrospective: optional

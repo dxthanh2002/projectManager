@@ -4,6 +4,7 @@ import { comment, task, userTeam, user } from '../schema/index.ts';
 import { eq, and, desc } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { requireAuth } from './teams.js';
+import { emitToTeam } from '../lib/socket.js';
 
 const router = Router();
 
@@ -128,8 +129,15 @@ router.post('/tasks/:taskId/comments', requireAuth, async (req, res) => {
             .where(eq(comment.id, commentId))
             .limit(1);
 
-        // TODO: Emit WebSocket event for real-time updates
-        // io.to(`team:${taskData[0].teamId}`).emit('comment:added', createdComment[0]);
+        // Emit WebSocket event for real-time updates
+        emitToTeam(taskData[0].teamId, 'comment:added', {
+            taskId: taskId,
+            commentId: commentId,
+            content: content.trim(),
+            authorId: userId,
+            authorName: req.user.name || req.user.email,
+            teamId: taskData[0].teamId,
+        });
 
         res.status(201).json(createdComment[0]);
     } catch (error) {

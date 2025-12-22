@@ -1,6 +1,6 @@
 # Story 4.3: Real-Time Notifications (Socket.io)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

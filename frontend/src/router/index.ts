@@ -15,8 +15,8 @@ const routes = [
   {
     path: "/",
     name: "Home",
-    component: Main,
-    meta: { requiresAuth: true },
+    component: () => import("@/views/DashboardView.vue"),
+    meta: { requiresAuth: true, fullWidth: true },
   },
   {
     path: "/signin",
@@ -51,7 +51,7 @@ const routes = [
     path: "/dashboard",
     name: "Dashboard",
     component: () => import("@/views/DashboardView.vue"),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, fullWidth: true }
   },
   {
     path: "/teams/create",

@@ -1,4 +1,5 @@
 import express from "express";
+import { createServer } from "http";
 import dotenv from "dotenv";
 import cors from "cors";
 import { fromNodeHeaders } from "better-auth/node";
@@ -6,11 +7,16 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.ts";
 import { db } from "./lib/db.js";
 import { errorHandler } from "./middleware/error.js";
+import { initSocket } from "./lib/socket.js";
 
 dotenv.config();
 const app = express();
+const server = createServer(app);
 
 const PORT = process.env.PORT || 5001;
+
+// Initialize Socket.io
+initSocket(server);
 
 // CORS
 app.use(
@@ -58,7 +64,7 @@ app.get("/api/me", async (req, res) => {
 app.use(errorHandler);
 
 if (db) {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 } else {

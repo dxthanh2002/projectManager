@@ -4,6 +4,7 @@ import { task, userTeam, user } from '../schema/index.ts';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { requireAuth, requireTeamMembership, requireManagerRole } from './teams.js';
+import { emitToTeam } from '../lib/socket.js';
 
 const router = Router();
 
@@ -134,6 +135,17 @@ router.post('/teams/:teamId/tasks', requireAuth, requireTeamMembership, requireM
             .leftJoin(user, eq(task.assigneeId, user.id))
             .where(eq(task.id, taskId))
             .limit(1);
+
+        // Emit socket event for task assignment notification
+        if (assigneeId) {
+            emitToTeam(teamId, 'task:assigned', {
+                taskId: taskId,
+                title: title.trim(),
+                assigneeId: assigneeId,
+                assignedBy: req.user.name || req.user.email,
+                teamId: teamId,
+            });
+        }
 
         res.status(201).json(createdTask[0]);
     } catch (error) {
@@ -340,8 +352,18 @@ router.patch('/tasks/:id/status', requireAuth, async (req, res) => {
         // Update status
         await db.update(task).set({ status }).where(eq(task.id, id));
 
-        // Add comment if provided (handled by comment routes)
-        // This would trigger WebSocket events in production
+        // Emit socket event for status change notification
+        emitToTeam(taskData[0].task.teamId, 'task:status_changed', {
+            taskId: id,
+            title: taskData[0].task.title,
+            newStatus: status,
+            previousStatus: taskData[0].task.status,
+            userId: userId,
+            userName: req.user.name || req.user.email,
+            assigneeId: taskData[0].task.assigneeId,
+            teamId: taskData[0].task.teamId,
+        });
+
 
         res.json({
             id,
