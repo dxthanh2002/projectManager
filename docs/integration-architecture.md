@@ -1,270 +1,242 @@
-# Integration Architecture
+# Integration Architecture - ManagerCheck
 
-**Generated:** 2025-12-05  
-**Repository Type:** Multi-part Application
+**Generated:** 2025-12-24
+**Pattern:** Client-Server with Real-time Updates
+
+---
 
 ## Overview
 
-This is a **client-server architecture** where the Vue 3 frontend communicates with the Express backend via REST API. Both parts share the same authentication library (better-auth) for seamless session management.
+ManagerCheck uses a classic client-server architecture with two communication channels:
+1. **REST API** - For CRUD operations
+2. **WebSocket** - For real-time notifications
 
-## Parts Summary
+---
 
-### Backend (API Server)
-- **Type:** RESTful API server
-- **Tech Stack:** Node.js, Express 5, MySQL, Drizzle ORM
-- **Root:** `backend/`
-- **Port:** 5001 (default)
-- **Purpose:** Data persistence, business logic, authentication
+## Communication Flow
 
-### Frontend (Web Client)
-- **Type:** Single Page Application (SPA)
-- **Tech Stack:** Vue 3, TypeScript, Vite, TailwindCSS, vue-toast-notification
-- **Root:** `frontend/`
-- **Port:** 5173 (default, development)
-- **Purpose:** User interface, client-side routing, state management
-
-## Integration Points
-
-### 1. Authentication Flow
-
-**Type:** better-auth (Session-based)
-
-```mermaid
-sequenceDiagram
-    participant F as Frontend
-    participant B as Backend
-    participant D as Database
-    
-    F->>B: POST /api/auth/sign-in (credentials)
-    B->>D: Verify user credentials
-    D-->>B: User data
-    B-->>F: Session cookie + user data
-    
-    F->>B: GET /api/me (with session cookie)
-    B->>B: Validate session via better-auth
-    B-->>F: Session data
-
-    F->>B: Any authenticated API call
-    B->>B: Check session
-    B-->>F: Protected data
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         FRONTEND (Vue 3 SPA)                            │
+│                                                                          │
+│  ┌──────────────────┐          ┌──────────────────┐                    │
+│  │   Pinia Stores   │          │  Socket.io Client │                    │
+│  │  (State Mgmt)    │          │ (Real-time Events)│                    │
+│  └────────┬─────────┘          └─────────┬────────┘                    │
+│           │                               │                             │
+│           ▼                               │                             │
+│  ┌──────────────────┐                     │                             │
+│  │    Axios (api.ts)│                     │                             │
+│  └────────┬─────────┘                     │                             │
+└───────────┼───────────────────────────────┼─────────────────────────────┘
+            │                               │
+            │ HTTP/REST                     │ WebSocket
+            │ Port 5001                     │ Port 5001
+            ▼                               ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│                         BACKEND (Express 5)                               │
+│                                                                           │
+│  ┌──────────────────────────────────────────────────────────────────────┐│
+│  │                        HTTP Server                                    ││
+│  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐         ││
+│  │  │   better-auth  │  │  REST Routes   │  │  Socket.io     │         ││
+│  │  │  /api/auth/*   │  │  /api/*        │  │  Server        │         ││
+│  │  └────────────────┘  └───────┬────────┘  └───────┬────────┘         ││
+│  └──────────────────────────────┼───────────────────┼────────────────────┘│
+│                                 │                   │                     │
+│                                 │                   │                     │
+│                                 ▼                   │                     │
+│  ┌──────────────────────────────────────────────────▼────────────────────┐│
+│  │                      emitToTeam(teamId, event, payload)               ││
+│  │                      Broadcasts to team room subscribers              ││
+│  └──────────────────────────────────────────────────────────────────────┘│
+│                                 │                                         │
+│                                 ▼                                         │
+│  ┌──────────────────────────────────────────────────────────────────────┐│
+│  │                      Drizzle ORM (db.js)                              ││
+│  │                      MySQL Connection                                 ││
+│  └──────────────────────────────────────────────────────────────────────┘│
+└───────────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│                         MySQL DATABASE                                    │
+│                                                                           │
+│   user │ team │ user_team │ task │ comment                               │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Endpoints:**
-- **Backend:** `/api/auth/*` - Handled by better-auth
-- **Backend:** `/api/me` - Get current session
-- **Frontend:** Uses better-auth client SDK (v1.4.4)
+---
 
-**Data Flow:**
-1. User submits credentials in frontend
-2. Frontend calls `/api/auth/sign-in`
-3. Backend validates via better-auth
-4. Backend creates session and returns cookie
-5. Frontend stores session in cookies
-6. Subsequent requests include session cookie automatically
+## REST API Integration
 
-### 2. API Communication
+### Axios Configuration
+```typescript
+// frontend/src/lib/api.ts
+import axios from 'axios';
 
-**Type:** 100% REST API over HTTP
-
-**Protocol:** JSON over HTTP/HTTPS  
-**Client:** axios (v1.13.2)  
-**Server:** Express (v5.1.0)
-
-**Request Flow:**
-```
-Frontend (axios)
-    ↓ HTTP Request
-Backend (Express)
-    ↓ Route Handler
-Controller
-    ↓ Business Logic
-Service Layer
-    ↓ Database Query
-Drizzle ORM → MySQL
+export const api = axios.create({
+    baseURL: 'http://localhost:5001/api',
+    withCredentials: true,  // Send session cookie
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
 ```
 
-**Response Flow:**
-```
-MySQL
-    ↓ Query Results
-Drizzle ORM
-    ↓ Mapped Objects
-Service Layer
-    ↓ Processed Data
-Controller
-    ↓ JSON Response
-Express → Frontend (axios)
+### Request Flow
+1. **User action** triggers store method
+2. **Pinia store** calls API via axios
+3. **Request** sent to Express backend
+4. **Middleware** validates auth + permissions
+5. **Route handler** processes request
+6. **Drizzle ORM** executes database query
+7. **Response** returned to store
+8. **Store** updates reactive state
+9. **UI** re-renders automatically
+
+---
+
+## WebSocket Integration
+
+### Connection Setup
+
+**Frontend (`lib/socket.ts`):**
+```typescript
+export const socket = io('http://localhost:5001', {
+    withCredentials: true,
+    autoConnect: false,
+});
 ```
 
-### 3. CORS Configuration
-
-**Backend Configuration:** (`backend/src/server.js`)
+**Backend (`lib/socket.js`):**
 ```javascript
-cors({
-  origin: process.env.CORS_ORIGIN || "",
-  methods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-})
+export function initSocket(server) {
+    const io = new Server(server, {
+        cors: {
+            origin: 'http://localhost:5173',
+            credentials: true,
+        },
+    });
+    
+    io.on('connection', (socket) => {
+        socket.on('join:team', (teamId) => {
+            socket.join(`team:${teamId}`);
+        });
+        
+        socket.on('leave:team', (teamId) => {
+            socket.leave(`team:${teamId}`);
+        });
+    });
+}
 ```
 
-**Allowed Origin:** Configured via `CORS_ORIGIN` environment variable  
-**Credentials:** Enabled (for session cookies)  
-**Methods:** GET, POST, PUT, DELETE, OPTIONS
+### Event Flow
+1. **User** opens team view
+2. **Frontend** emits `join:team` event
+3. **Backend** adds socket to team room
+4. **Action** occurs (task created, comment added)
+5. **Route handler** calls `emitToTeam()`
+6. **Socket.io** broadcasts to room
+7. **All connected clients** receive event
+8. **Frontend** updates stores locally
+9. **NotificationStore** adds notification
 
-### 4. State Management
+---
 
-**Frontend State:** Pinia (v3.0.4)
-- Centralized state store
-- Reactive data management
-- Persists user session state
+## Real-time Events
 
-**Backend State:** Stateless
-- Session managed by better-auth (database-backed)
-- No in-memory session store
+| Event | Trigger | Payload | Frontend Action |
+|-------|---------|---------|-----------------|
+| `task:assigned` | Task created with assignee | taskId, title, assigneeId, assignedBy, teamId | Show notification, update task list |
+| `task:status_changed` | Status updated | taskId, title, newStatus, previousStatus, userId, userName | Update task locally, show notification |
+| `comment:added` | Comment created | taskId, commentId, content, authorId, authorName, teamId | Add comment locally, show notification |
 
-## API Endpoints
+---
 
-### Currently Implemented
-
-| Method | Endpoint | Purpose | Auth Required |
-|--------|----------|---------|---------------|
-| GET | `/` | Health check | No |
-| POST/GET | `/api/auth/*` | Authentication (better-auth) | No |
-| GET | `/api/me` | Get current session | Yes |
-
-### Expected Endpoints (Based on Data Models)
-
-| Method | Endpoint | Purpose | Auth Required |
-|--------|----------|---------|---------------|
-| GET | `/api/tasks` | List tasks | Yes |
-| POST | `/api/tasks` | Create task | Yes |
-| GET | `/api/tasks/:id` | Get task details | Yes |
-| PUT | `/api/tasks/:id` | Update task | Yes |
-| DELETE | `/api/tasks/:id` | Delete task | Yes |
-
-> **Note:** Task API endpoints appear to be planned but not yet implemented in routes.
-
-## Data Flow Diagram
+## Authentication Flow
 
 ```
-┌─────────────────────────────────────┐
-│         Frontend (Vue 3)            │
-│  ┌────────────────────────────┐     │
-│  │  Components & Views        │     │
-│  └──────────┬─────────────────┘     │
-│             │                        │
-│  ┌──────────▼─────────────────┐     │
-│  │  Services (axios)          │     │
-│  └──────────┬─────────────────┘     │
-│             │                        │
-│  ┌──────────▼─────────────────┐     │
-│  │  Pinia Store (State)       │     │
-│  └────────────────────────────┘     │
-└──────────────┬──────────────────────┘
-               │
-        HTTP/JSON (REST API)
-               │
-┌──────────────▼──────────────────────┐
-│         Backend (Express)           │
-│  ┌────────────────────────────┐     │
-│  │  Routes                    │     │
-│  └──────────┬─────────────────┘     │
-│             │                        │
-│  ┌──────────▼─────────────────┐     │
-│  │  Controllers               │     │
-│  └──────────┬─────────────────┘     │
-│             │                        │
-│  ┌──────────▼─────────────────┐     │
-│  │  Services (Business Logic) │     │
-│  └──────────┬─────────────────┘     │
-│             │                        │
-│  ┌──────────▼─────────────────┐     │
-│  │  Drizzle ORM               │     │
-│  └──────────┬─────────────────┘     │
-└──────────────┬──────────────────────┘
-               │
-        SQL Queries
-               │
-┌──────────────▼──────────────────────┐
-│         MySQL Database              │
-│  ┌────────────────────────────┐     │
-│  │  users (better-auth)       │     │
-│  │  tasks                     │     │
-│  │  todo                      │     │
-│  └────────────────────────────┘     │
-└─────────────────────────────────────┘
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Frontend  │     │   Backend   │     │   MySQL     │
+└──────┬──────┘     └──────┬──────┘     └──────┬──────┘
+       │                   │                   │
+       │  POST /api/auth/signin               │
+       │  {email, password}                   │
+       │─────────────────►│                   │
+       │                   │  Verify user      │
+       │                   │─────────────────►│
+       │                   │◄─────────────────│
+       │                   │                   │
+       │                   │  Create session   │
+       │                   │─────────────────►│
+       │                   │◄─────────────────│
+       │                   │                   │
+       │  Set-Cookie: session                 │
+       │◄─────────────────│                   │
+       │                   │                   │
+       │  GET /api/me      │                   │
+       │  Cookie: session  │                   │
+       │─────────────────►│                   │
+       │                   │  Validate session │
+       │                   │─────────────────►│
+       │                   │◄─────────────────│
+       │  {user, session}  │                   │
+       │◄─────────────────│                   │
+       │                   │                   │
 ```
 
-## Shared Dependencies
+---
 
-### better-auth Library
-- **Backend:** v1.3.34
-- **Frontend:** v1.4.4
-- **Purpose:** Unified authentication across client and server
-- **Strategy:** Server generates sessions, client validates automatically
+## CORS Configuration
 
-### Development Tools
-- **pnpm:** Package manager for both parts
-- **Prettier:** Code formatting (v3.6.2)
-- **TypeScript:** Type safety (backend uses `.ts` for certain files)
-
-## Communication Patterns
-
-### Request/Response Cycle
-1. Frontend initiates HTTP request via axios
-2. Request includes session cookie (if authenticated)
-3. Backend validates session via better-auth
-4. Backend processes request through controller → service → ORM
-5. Backend returns JSON response
-6. Frontend updates Pinia store and UI reactively
-
-### Error Handling
-- **Backend:** Express error middleware (to be implemented)
-- **Frontend:** axios interceptors + `vue-toast-notification` for valid user feedback
-- **Expected:** Consistent error response format
-
-## Environment Configuration
-
-### Backend `.env`
-```env
-PORT=5001
-CORS_ORIGIN=http://localhost:5173
-DATABASE_URL=mysql://...
-BETTER_AUTH_SECRET=...
+**Backend:**
+```javascript
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'delay'],
+    credentials: true,  // Allow cookies
+}));
 ```
 
-### Frontend `.env`
-```env
-VITE_API_URL=http://localhost:5001
+**Frontend:**
+```typescript
+// Axios
+withCredentials: true
+
+// Socket.io
+withCredentials: true
 ```
 
-## Security Considerations
+---
 
-1. **CORS:** Restricted to specific frontend origin
-2. **Credentials:** Cookie-based sessions with HttpOnly flag
-3. **HTTPS:** Should be used in production
-4. **Secrets:** Stored in `.env` files (not committed)
-5. **Auth Library:** better-auth handles security best practices
+## Data Synchronization Strategy
 
-## Deployment Considerations
+### Optimistic Updates
+For better UX, some operations use optimistic updates:
+1. **Update local state immediately**
+2. **Send API request**
+3. **On error, revert local state**
 
-### Development
-- Frontend: `pnpm dev` on port 5173
-- Backend: `pnpm dev` on port 5001
-- Database: Local MySQL instance
+### Real-time Sync
+WebSocket events ensure all clients stay in sync:
+1. **Actor client** makes change via REST
+2. **Backend** processes and broadcasts
+3. **All clients** (including actor) receive event
+4. **Non-actor clients** update local state
 
-### Production (Recommended)
-- Frontend: Static build deployed to CDN/hosting
-- Backend: Node.js server on cloud platform
-- Database: Managed MySQL service
-- Reverse Proxy: Nginx for routing and SSL
+---
 
-## Future Improvements
+## Port Configuration
 
-1. **API Versioning:** `/api/v1/*` for stable contracts
-2. **WebSocket:** Real-time updates for task changes
-3. **API Documentation:** OpenAPI/Swagger spec
-4. **Monorepo:** Combine into pnpm workspace
-5. **Shared Types:** TypeScript types package for frontend/backend
-6. **GraphQL:** Consider for complex data fetching needs
+| Service | Port | Description |
+|---------|------|-------------|
+| Frontend (Vite) | 5173 | Development server |
+| Backend (Express) | 5001 | REST API + WebSocket |
+| MySQL | 3306 | Database |
+
+---
+
+**Last Updated:** 2025-12-24
+**Version:** 2.0.0

@@ -70,7 +70,7 @@ const routes = [
     path: "/teams/:teamId/members",
     name: "TeamMembers",
     component: () => import("@/views/TeamMembersView.vue"),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, fullWidth: true }
   },
   {
     path: "/teams/:teamId/tasks",

@@ -1,11 +1,11 @@
 {
   "workflow_version": "1.2.0",
   "timestamps": {
-    "started": "2025-12-05T11:00:29+07:00",
-    "last_updated": "2025-12-05T11:05:00+07:00",
-    "completed": "2025-12-05T11:05:00+07:00"
+    "started": "2025-12-24T10:02:01+07:00",
+    "last_updated": "2025-12-24T10:15:00+07:00",
+    "completed": "2025-12-24T10:15:00+07:00"
   },
-  "mode": "initial_scan",
+  "mode": "full_rescan",
   "scan_level": "deep",
   "project_root": "d:\\managercheck",
   "output_folder": "d:\\managercheck\\docs",
@@ -13,20 +13,26 @@
     {
       "step": "step_1",
       "status": "completed",
-      "timestamp": "2025-12-05T11:01:00+07:00",
+      "timestamp": "2025-12-24T10:03:00+07:00",
       "summary": "Classified as multi-part with 2 parts (backend, frontend)"
     },
     {
-      "step": "step_2-9",
+      "step": "step_2-4",
       "status": "completed",
-      "timestamp": "2025-12-05T11:04:00+07:00",
-      "summary": "Deep scan complete - analyzed structure, tech stack, schemas, and integration"
+      "timestamp": "2025-12-24T10:06:00+07:00",
+      "summary": "Deep scan complete - analyzed routes, schemas, stores, and components"
+    },
+    {
+      "step": "step_5-9",
+      "status": "completed",
+      "timestamp": "2025-12-24T10:12:00+07:00",
+      "summary": "Generated architecture, data models, and integration docs"
     },
     {
       "step": "step_10",
       "status": "completed",
-      "timestamp": "2025-12-05T11:05:00+07:00",
-      "summary": "Generated master index and all documentation files"
+      "timestamp": "2025-12-24T10:15:00+07:00",
+      "summary": "Generated master index with all documentation links"
     }
   ],
   "current_step": "complete",
@@ -34,30 +40,33 @@
     "project_classification": "Multi-part: Express REST API + Vue 3 SPA",
     "repository_type": "multi-part",
     "parts_count": 2,
-    "primary_tech": "Node.js, Vue 3, MySQL"
+    "primary_tech": "Node.js, Vue 3, MySQL, Socket.io",
+    "backend_routes": 4,
+    "backend_endpoints": "15+",
+    "frontend_components": 114,
+    "frontend_stores": 5,
+    "socket_events": 3
   },
   "project_types": [
     {
       "part_id": "backend",
       "project_type_id": "backend",
-      "display_name": "Express REST API"
+      "display_name": "Express REST API with Socket.io"
     },
     {
       "part_id": "frontend",
       "project_type_id": "web",
-      "display_name": "Vue 3 SPA"
+      "display_name": "Vue 3 SPA with Pinia"
     }
   ],
   "outputs_generated": [
     "project-scan-report.json",
     "project-overview.md",
-    "source-tree-analysis.md",
     "data-models.md",
-    "development-guide.md",
-    "integration-architecture.md",
     "architecture-backend.md",
     "architecture-frontend.md",
+    "integration-architecture.md",
     "index.md"
   ],
-  "resume_instructions": "Workflow completed successfully"
+  "resume_instructions": "Workflow completed successfully - Full Rescan Deep Scan"
 }

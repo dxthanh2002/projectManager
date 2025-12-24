@@ -1,16 +1,16 @@
 # Project Documentation Index
 
-**Generated:** 2025-12-05  
-**Project:** Task Management Application  
-**Type:** Multi-part Application (Client-Server)
+**Generated:** 2025-12-24  
+**Project:** ManagerCheck - Task Management Application  
+**Type:** Multi-part Application (Backend + Frontend)
 
 ---
 
 ## 📋 Project Overview
 
-- **Type:** Multi-part with 2 parts (Backend + Frontend)
+- **Type:** Multi-part with 2 components (Backend + Frontend)
 - **Primary Language:** JavaScript/TypeScript
-- **Architecture:** RESTful API + Single Page Application
+- **Architecture:** RESTful API + Vue 3 SPA + WebSocket
 - **Package Manager:** pnpm
 
 ---
@@ -18,58 +18,68 @@
 ## 🚀 Quick Reference
 
 ### Backend (Express REST API)
-- **Type:** RESTful API Server
-- **Tech Stack:** Node.js, Express 5, MySQL, Drizzle ORM, better-auth
-- **Root:** `backend/`
-- **Port:** 5001 (default)
-- **Entry Point:** `backend/src/server.js`
+| Property | Value |
+|----------|-------|
+| **Type** | RESTful API Server |
+| **Tech Stack** | Node.js, Express 5, MySQL, Drizzle ORM, Socket.io, better-auth |
+| **Root** | `backend/` |
+| **Port** | 5001 (default) |
+| **Entry Point** | `backend/src/server.js` |
+| **Routes** | 4 modules, 15+ endpoints |
 
 ### Frontend (Vue 3 SPA)
-- **Type:** Single Page Application
-- **Tech Stack:** Vue 3, TypeScript, Vite, TailwindCSS, Pinia
-- **Root:** `frontend/`
-- **Port:** 5173 (development)
-- **Entry Point:** `frontend/src/main.ts`
+| Property | Value |
+|----------|-------|
+| **Type** | Single Page Application |
+| **Tech Stack** | Vue 3, TypeScript, Vite (rolldown), TailwindCSS 4, Pinia |
+| **Root** | `frontend/` |
+| **Port** | 5173 (development) |
+| **Entry Point** | `frontend/src/main.ts` |
+| **Components** | 114 total (9 app + 102 shadcn-vue) |
+| **Stores** | 5 Pinia stores |
 
 ---
 
 ## 📚 Generated Documentation
 
 ### Core Documentation
-- **[Project Overview](./project-overview.md)** - Executive summary, tech stack, getting started
-- **[Source Tree Analysis](./source-tree-analysis.md)** - Annotated directory structure with integration points
-- **[Integration Architecture](./integration-architecture.md)** - How frontend and backend communicate
+| Document | Description |
+|----------|-------------|
+| **[Project Overview](./project-overview.md)** | Executive summary, tech stack, getting started |
+| **[Source Tree Analysis](./source-tree-analysis.md)** | Annotated directory structure |
+| **[Integration Architecture](./integration-architecture.md)** | REST + WebSocket communication flow |
 
 ### Architecture Documentation
-- **[Backend Architecture](./architecture-backend.md)** - Express API, MVC pattern, Drizzle ORM
-- **[Frontend Architecture](./architecture-frontend.md)** - Vue 3 SPA, component structure, routing
+| Document | Description |
+|----------|-------------|
+| **[Backend Architecture](./architecture-backend.md)** | Express API, middleware, Socket.io, endpoints |
+| **[Frontend Architecture](./architecture-frontend.md)** | Vue 3 SPA, Pinia stores, routing, components |
 
 ### Data & Development
-- **[Data Models](./data-models.md)** - MySQL schema, tables, relationships
-- **[Development Guide](./development-guide.md)** - Setup, commands, workflows, troubleshooting
+| Document | Description |
+|----------|-------------|
+| **[Data Models](./data-models.md)** | MySQL schema, Drizzle ORM, relations |
+| **[Development Guide](./development-guide.md)** | Setup, commands, workflows |
 
 ---
 
 ## 🎯 Getting Started
 
 ### Prerequisites
-- Node.js (latest LTS)
+- Node.js 20+ (LTS recommended)
 - pnpm 10.22.0+
-- MySQL database
+- MySQL 8.x database
 
 ### Quick Start
 
-#### 1. Backend Setup
 ```bash
+# Backend
 cd backend
 pnpm install
-# Configure .env file
 pnpm drizzle-kit migrate
 pnpm dev
-```
 
-#### 2. Frontend Setup
-```bash
+# Frontend (new terminal)
 cd frontend
 pnpm install
 pnpm dev
@@ -85,40 +95,47 @@ pnpm dev
 
 ```
 Frontend (Vue 3 SPA)
-    ↓ REST API (HTTP/JSON)
-Backend (Express)
-    ↓ SQL Queries
+    ↓ REST API (HTTP/JSON) + WebSocket (Socket.io)
+Backend (Express 5)
+    ↓ SQL Queries (Drizzle ORM)
 MySQL Database
 ```
 
 **Authentication:** better-auth (session-based)  
-**State Management:** Pinia (frontend)  
-**ORM:** Drizzle (backend)  
-**Styling:** TailwindCSS + Flowbite
+**State Management:** Pinia (5 stores)  
+**Real-time:** Socket.io (3 events)  
+**ORM:** Drizzle (type-safe queries)  
+**Styling:** TailwindCSS 4 + shadcn-vue
 
 ---
 
 ## 📖 Key Features
 
-- **User Authentication:** Sign up, sign in, session management
-- **Task Management:** Create, update, delete tasks
-- **Task Status Tracking:** todo, in_progress, done, blocked
-- **Priority Levels:** low, medium, high
-- **User Assignment:** Assign tasks to users
-- **Responsive UI:** TailwindCSS-based modern interface
+- ✅ **User Authentication** - Sign up, sign in, sessions
+- ✅ **Team Management** - Create, invite members, roles
+- ✅ **Task Management** - CRUD, status, priority, due dates, assignees
+- ✅ **Comments System** - Task discussions
+- ✅ **Real-time Notifications** - Socket.io integration
+- ✅ **Role-based Access** - Manager vs Member permissions
 
 ---
 
-## 🔗 Integration Points
+## 🔗 API Summary
 
-### Frontend → Backend
-- **Protocol:** REST API over HTTP
-- **Auth:** `/api/auth/*` (better-auth)
-- **Session Check:** `/api/me`
-- **CORS:** Configured for localhost development
+| Module | Endpoints | Description |
+|--------|-----------|-------------|
+| Auth | `/api/auth/*` | better-auth managed |
+| Teams | 5 | CRUD + list |
+| Members | 4 | Invite, manage, roles |
+| Tasks | 6 | CRUD + status |
+| Comments | 4 | CRUD |
 
-### Shared Libraries
-- **better-auth:** v1.3.34 (backend) + v1.4.4 (frontend)
+### Socket Events
+| Event | Description |
+|-------|-------------|
+| `task:assigned` | New task assignment |
+| `task:status_changed` | Status update |
+| `comment:added` | New comment |
 
 ---
 
@@ -126,21 +143,23 @@ MySQL Database
 
 ```
 managercheck/
-├── backend/           # Express REST API
+├── backend/           # Express REST API + Socket.io
 │   ├── src/
 │   │   ├── server.js  # Entry point
-│   │   ├── lib/       # Core (auth, db)
-│   │   ├── schema/    # Database schemas
-│   │   └── ...
+│   │   ├── lib/       # Core (auth, db, socket)
+│   │   ├── routes/    # 4 route modules
+│   │   ├── schema/    # Drizzle schemas
+│   │   └── middleware/
 │   └── package.json
 │
 ├── frontend/          # Vue 3 SPA
 │   ├── src/
 │   │   ├── main.ts    # Entry point
 │   │   ├── App.vue    # Root component
-│   │   ├── views/     # 7 page components
-│   │   ├── components/# 33+ reusable components
-│   │   └── ...
+│   │   ├── router/    # Vue Router
+│   │   ├── store/     # 5 Pinia stores
+│   │   ├── views/     # 11 page components
+│   │   └── components/# 114 components
 │   └── package.json
 │
 └── docs/              # This documentation
@@ -153,126 +172,40 @@ managercheck/
 
 ### Backend
 ```bash
-pnpm dev              # Start dev server (nodemon)
-pnpm start            # Start production server
-pnpm drizzle-kit studio  # Open database GUI
+pnpm dev                 # Start dev server (nodemon)
+pnpm start               # Production server
+pnpm drizzle-kit studio  # Database GUI
+pnpm drizzle-kit migrate # Run migrations
 ```
 
 ### Frontend
 ```bash
-pnpm dev              # Start dev server (Vite HMR)
-pnpm build            # Build for production
-pnpm preview          # Preview production build
+pnpm dev      # Start dev server (Vite HMR)
+pnpm build    # Production build
+pnpm preview  # Preview build
 ```
 
 ---
 
-## 🔍 Documentation Navigation
+## 📊 Current State (2025-12-24)
 
-### For Developers
-1. Start with [Development Guide](./development-guide.md) for setup
-2. Review [Architecture - Backend](./architecture-backend.md) for API structure
-3. Review [Architecture - Frontend](./architecture-frontend.md) for UI structure
-4. Check [Data Models](./data-models.md) for database schema
+### Sprint Progress
+| Epic | Stories | Status |
+|------|---------|--------|
+| 1. Foundation | 2 | ✅ Complete |
+| 2. Team Management | 2 | ✅ Complete |
+| 3. Task Management | 3 | ✅ Complete |
+| 4. Comments & Notifications | 2 | ✅ Complete |
+| 5. Dashboard & Analytics | In Progress | 🔄 Active |
 
-### For Planning/PRD
-1. Read [Project Overview](./project-overview.md) for high-level understanding
-2. Review [Integration Architecture](./integration-architecture.md) for system design
-3. Check [Source Tree Analysis](./source-tree-analysis.md) for codebase layout
-
----
-
-## 📊 Tech Stack Summary
-
-| Layer | Technologies |
-|-------|-------------|
-| **Frontend** | Vue 3, TypeScript, Vite, TailwindCSS, Pinia, Vue Router |
-| **Backend** | Node.js, Express 5, MySQL, Drizzle ORM |
-| **Authentication** | better-auth |
-| **Build Tools** | Vite, pnpm |
-| **Validation** | vee-validate, Zod |
-| **HTTP Client** | axios |
-| **UI Components** | Flowbite Vue, lucide-vue-next |
+### Codebase Stats
+- **Backend:** ~1,100 lines across 4 route modules
+- **Frontend:** 114 components, 5 Pinia stores
+- **Database:** 5 tables with relations
+- **Sprint Artifacts:** 10+ implementation specs
 
 ---
 
-## 🎨 Project Highlights
-
-### Backend
-- ✅ Express 5 with ESM modules
-- ✅ Type-safe queries with Drizzle ORM
-- ✅ Integrated authentication (better-auth)
-- ✅ MySQL database with migrations
-- ✅ CORS configured for frontend
-
-### Frontend
-- ✅ Vue 3 Composition API (`<script setup>`)
-- ✅ TypeScript for type safety
-- ✅ 7 routes with lazy loading
-- ✅ 33+ reusable components
-- ✅ Form validation (vee-validate + Zod)
-- ✅ Modern UI (TailwindCSS + Flowbite)
-- ✅ State management (Pinia)
-
----
-
-## 🚧 Current State
-
-### Implemented
-- Backend server setup with Express
-- Database connection with Drizzle ORM
-- Authentication system (better-auth)
-- Frontend SPA with routing
-- UI components and layouts
-- Form validation infrastructure
-
-### In Progress / To Be Completed
-- Task CRUD API endpoints
-- Frontend-backend task integration
-- Complete Pinia stores
-- API service layer
-- Testing infrastructure
-
----
-
-## 📝 Notes
-
-- **Development Mode:** Both backend and frontend run on separate ports
-- **Production Deployment:** Frontend builds to static files, backend runs as Node.js server
-- **Database:** MySQL required - configure connection in backend `.env`
-- **Authentication:** better-auth manages sessions automatically
-- **Code Formatting:** Prettier configured for both parts
-
----
-
-## 🔐 Environment Configuration
-
-### Backend `.env`
-```env
-PORT=5001
-CORS_ORIGIN=http://localhost:5173
-DATABASE_URL=mysql://user:password@localhost:3306/dbname
-BETTER_AUTH_SECRET=your-secret-key
-```
-
-### Frontend `.env`
-```env
-VITE_API_URL=http://localhost:5001
-```
-
----
-
-## 📚 Additional Resources
-
-- [Vue 3 Documentation](https://vuejs.org/)
-- [Vite Documentation](https://vitejs.dev/)
-- [Drizzle ORM Documentation](https://orm.drizzle.team/)
-- [better-auth Documentation](https://www.better-auth.com/)
-- [TailwindCSS Documentation](https://tailwindcss.com/)
-- [Flowbite Vue Components](https://flowbite-vue.com/)
-
----
-
-**Last Updated:** 2025-12-05  
-**Documentation Version:** 1.0.0  
-**Generated by:** BMAD document-project workflow (Deep Scan)
+**Last Updated:** 2025-12-24  
+**Documentation Version:** 2.0.0  
+**Generated by:** BMAD document-project (Deep Scan - Full Rescan)

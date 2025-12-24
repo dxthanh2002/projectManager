@@ -5,6 +5,7 @@ import { useTeamStore } from '@/store/useTeamStore'
 import { useTaskStore } from '@/store/useTaskStore'
 import { authClient } from '@/lib/auth-client'
 import CommentList from '@/components/comments/CommentList.vue'
+import TeamSidebar from '@/components/TeamSidebar.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from 'vue-toast-notification'
@@ -12,19 +13,13 @@ import {
   ListTodo, 
   Plus, 
   Loader2, 
-  Home,
   Calendar,
   User,
-  Users,
-  Settings,
   CheckCircle2,
   Clock,
-  AlertCircle,
   Ban,
   X,
-  ChevronDown,
-  Hash,
-  MoreHorizontal
+  Hash
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -42,7 +37,6 @@ const members = computed(() => teamStore.members[teamId.value] || [])
 // Get current user session
 const session = authClient.useSession()
 const currentUserId = computed(() => session.value?.data?.user?.id || null)
-const userName = computed(() => session.value?.data?.user?.name || 'User')
 
 // Task selection
 const selectedTask = ref<ITask | null>(null)
@@ -100,8 +94,6 @@ watch([statusFilter, priorityFilter, assigneeFilter], () => {
   if (assigneeFilter.value) filters.assigneeId = assigneeFilter.value
   taskStore.fetchTasks(teamId.value, filters)
 })
-
-const goHome = () => router.push('/')
 
 const openCreateModal = () => {
   newTask.value = { title: '', description: '', priority: 'medium', dueDate: null, assigneeId: null }
@@ -234,45 +226,17 @@ const taskCounts = computed(() => ({
 
 <template>
   <div class="flex h-screen bg-white">
-    <!-- Sidebar -->
-    <div class="w-64 bg-gray-900 text-white flex flex-col">
-      <!-- Team Header -->
-      <div class="p-4 border-b border-gray-700">
-        <button 
-          class="flex items-center gap-2 w-full hover:bg-gray-800 rounded-md p-2 -m-2"
-          @click="goHome"
-        >
-          <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-            <Users class="h-4 w-4 text-white" />
-          </div>
-          <span class="font-semibold truncate flex-1 text-left">{{ currentTeam?.name || 'Team' }}</span>
-          <ChevronDown class="h-4 w-4 text-gray-400" />
-        </button>
-      </div>
-
-      <!-- Navigation -->
-      <nav class="flex-1 p-2 space-y-1">
-        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 text-gray-300 hover:text-white">
-          <Home class="h-5 w-5" />
-          <span>Home</span>
-        </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-md bg-gray-800 text-white">
-          <ListTodo class="h-5 w-5" />
-          <span>Tasks</span>
-          <span class="ml-auto text-xs bg-gray-700 px-2 py-0.5 rounded-full">{{ taskCounts.all }}</span>
-        </a>
-        <a :href="`/teams/${teamId}/members`" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 text-gray-300 hover:text-white">
-          <Users class="h-5 w-5" />
-          <span>Members</span>
-          <span class="ml-auto text-xs bg-gray-700 px-2 py-0.5 rounded-full">{{ members.length }}</span>
-        </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-800 text-gray-300 hover:text-white">
-          <Settings class="h-5 w-5" />
-          <span>Settings</span>
-        </a>
-
-        <!-- Task Status Filters -->
-        <div class="pt-4 mt-4 border-t border-gray-700">
+    <!-- Shared Sidebar -->
+    <TeamSidebar 
+      :team-id="teamId"
+      :team-name="currentTeam?.name || 'Team'"
+      :task-count="tasks.length"
+      :member-count="members.length"
+      active-tab="tasks"
+    >
+      <!-- Status Filters Slot -->
+      <template #filters>
+        <div class="p-2 border-t border-gray-700">
           <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
             Status
           </div>
@@ -292,18 +256,8 @@ const taskCounts = computed(() => ({
             <span class="ml-auto text-xs">{{ count }}</span>
           </button>
         </div>
-      </nav>
-
-      <!-- User -->
-      <div class="p-4 border-t border-gray-700">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-            <User class="h-4 w-4 text-gray-300" />
-          </div>
-          <span class="text-sm text-gray-300 truncate">{{ userName }}</span>
-        </div>
-      </div>
-    </div>
+      </template>
+    </TeamSidebar>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col">
