@@ -8,10 +8,10 @@
 
 ## 📋 Project Overview
 
-- **Type:** Multi-part with 2 components (Backend + Frontend)
+- **Type:** Multi-part with 3 components (Backend + Frontend + Mobile)
 - **Primary Language:** JavaScript/TypeScript
-- **Architecture:** RESTful API + Vue 3 SPA + WebSocket
-- **Package Manager:** pnpm
+- **Architecture:** RESTful API + Vue 3 SPA + React Native App + WebSocket
+- **Package Manager:** pnpm (web), npm (mobile)
 
 ---
 
@@ -38,6 +38,16 @@
 | **Components** | 114 total (9 app + 102 shadcn-vue) |
 | **Stores** | 5 Pinia stores |
 
+### Mobile (React Native / Expo)
+| Property | Value |
+|----------|-------|
+| **Type** | Mobile App (iOS + Android) |
+| **Tech Stack** | Expo 51, React Native 0.74, expo-router, Formik + Yup |
+| **Root** | `mobile/` |
+| **Entry Point** | `mobile/src/app/_layout.tsx` |
+| **Components** | 32 reusable components |
+| **Routes** | 5 route groups (auth, tabs, user, like, product) |
+
 ---
 
 ## 📚 Generated Documentation
@@ -54,6 +64,7 @@
 |----------|-------------|
 | **[Backend Architecture](./architecture-backend.md)** | Express API, middleware, Socket.io, endpoints |
 | **[Frontend Architecture](./architecture-frontend.md)** | Vue 3 SPA, Pinia stores, routing, components |
+| **[Mobile Architecture](./architecture-mobile.md)** | React Native/Expo, expo-router, components |
 
 ### Data & Development
 | Document | Description |

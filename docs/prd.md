@@ -12,7 +12,7 @@ date: '2025-12-05'
 # Product Requirements Document - managercheck
 
 **Author:** ThanhThanhThanh  
-**Date:** 2025-12-05
+**Date:** 2025-12-05 (Web) | 2025-12-24 (Mobile Extension)
 
 ## Executive Summary
 
@@ -355,4 +355,167 @@ ManagerCheck is a **Single Page Application (SPA)** built with Vue 3, communicat
 ### Reliability
 *   **NFR13:** Target 99.5% uptime (allows ~3.5 hours downtime/month).
 *   **NFR14:** Graceful degradation to polling if WebSocket connection fails.
+
+---
+
+## Mobile App Requirements
+
+**Added:** 2025-12-24  
+**Stack:** React Native (Expo 51), expo-router, TypeScript
+
+### Mobile Strategy
+
+**Platform Priority:** Android-first, with iOS support via Expo cross-platform build.
+
+**Core Philosophy:**
+- **Feature Parity:** All web app features available on mobile
+- **Shared Backend:** Reuse existing Express API (no mobile-specific endpoints)
+- **Real-time Sync:** WebSocket notifications (Socket.io, same as web)
+- **Online-Only:** No offline mode for MVP (mirrors web behavior)
+
+### Mobile-Specific Considerations
+
+#### Navigation Pattern
+- **Bottom Tab Navigation:** Primary navigation for main sections
+- **Stack Navigation:** Nested screens within each tab
+- **Drawer Navigation:** Team switching and settings
+
+#### Touch-Optimized UI
+- Larger touch targets (minimum 44x44 points)
+- Swipe gestures for common actions (mark as done, delete)
+- Pull-to-refresh for lists
+
+#### Mobile Authentication
+- Standard email/password login (better-auth)
+- Session persistence via AsyncStorage
+- No biometric authentication for MVP
+
+### Mobile User Flows
+
+#### Flow M1: Mobile Login & Dashboard Access
+1. User opens app → sees splash screen with ManagerCheck logo
+2. If no session: Redirect to login screen
+3. User enters email/password → taps "Sign In"
+4. On success: Navigate to Dashboard (bottom tab)
+5. Session token stored in AsyncStorage for persistence
+
+#### Flow M2: Manager Creates Task (Mobile)
+1. Manager taps (+) floating button on Dashboard
+2. Modal slides up with task form
+3. Enter: Title, Description (expandable), Priority (picker), Due Date (date picker)
+4. Select Assignee from team member list
+5. Tap "Assign Task" → success toast → modal closes
+6. Socket.io emits task:assigned event to assignee
+
+#### Flow M3: Member Updates Status (Mobile)
+1. Member receives push-style notification toast
+2. Taps notification → navigates to task detail screen
+3. Views task context in scrollable card
+4. Taps status button (bottom of screen)
+5. Selects new status from action sheet
+6. If "Blocked": Comment modal appears (required)
+7. Status updates → Socket.io broadcasts to team
+
+#### Flow M4: Team Navigation (Mobile)
+1. User swipes from left edge (or taps hamburger)
+2. Drawer opens showing team list
+3. Taps different team → Dashboard updates
+4. Current team shown in header
+
+### Mobile Functional Requirements
+
+#### MFR1: Authentication
+- **MFR1.1:** Users can log in with email/password
+- **MFR1.2:** Session persists across app restarts (AsyncStorage)
+- **MFR1.3:** Users can log out from settings/drawer
+
+#### MFR2: Dashboard (Manager)
+- **MFR2.1:** View team tasks in scrollable list
+- **MFR2.2:** Filter by status (tab bar: All | Todo | In Progress | Done | Blocked)
+- **MFR2.3:** Filter by assignee (dropdown picker)
+- **MFR2.4:** Pull-to-refresh to sync latest data
+
+#### MFR3: My Tasks (Member)
+- **MFR3.1:** View assigned tasks in list format
+- **MFR3.2:** Filter by status using segmented control
+- **MFR3.3:** Tap task to view full details
+
+#### MFR4: Task Management
+- **MFR4.1:** Managers can create tasks via floating action button
+- **MFR4.2:** Managers can edit task details (long press → edit)
+- **MFR4.3:** Managers can delete tasks (swipe-to-delete or long press → delete)
+- **MFR4.4:** Anyone can change status of their assigned tasks
+- **MFR4.5:** Status change to "Blocked" requires comment
+
+#### MFR5: Comments
+- **MFR5.1:** View comments in task detail screen
+- **MFR5.2:** Add comment via text input at bottom
+- **MFR5.3:** Comments appear in real-time (Socket.io)
+
+#### MFR6: Team Management
+- **MFR6.1:** Managers can view team members list
+- **MFR6.2:** Managers can invite members by email
+- **MFR6.3:** Managers can remove members (swipe or long press)
+- **MFR6.4:** Team switcher available in drawer navigation
+
+#### MFR7: Notifications
+- **MFR7.1:** In-app toast notifications for real-time events
+- **MFR7.2:** Notification list accessible from bell icon
+- **MFR7.3:** Tapping notification navigates to relevant task
+- **MFR7.4:** Unread badge count on bell icon
+
+### Mobile Non-Functional Requirements
+
+#### Performance
+- **MNFR1:** App cold start < 3 seconds
+- **MNFR2:** Screen transitions < 300ms
+- **MNFR3:** List scrolling at 60fps
+- **MNFR4:** WebSocket reconnection < 2 seconds after network restore
+
+#### Compatibility
+- **MNFR5:** Android 8.0+ (API 26+)
+- **MNFR6:** iOS 13+ (Expo managed workflow)
+- **MNFR7:** Minimum screen width: 320dp
+
+#### Network
+- **MNFR8:** Graceful handling of network errors
+- **MNFR9:** Loading states for all async operations
+- **MNFR10:** Retry logic for failed API calls
+
+### Mobile Technology Stack
+
+| Layer | Technology | Version |
+|-------|------------|---------|
+| Framework | React Native | 0.74.3 |
+| Platform | Expo | 51.0.22 |
+| Navigation | expo-router | 3.5.23 |
+| State | React Context | Built-in |
+| Storage | AsyncStorage | 1.23.1 |
+| HTTP | Axios | 1.7.5 |
+| Forms | Formik + Yup | Latest |
+| Real-time | Socket.io-client | 4.8.1 |
+| Animations | Reanimated | 3.10.1 |
+
+### Mobile Development Phases
+
+#### Phase 1: Core Mobile MVP
+- [ ] Authentication flow (login, logout, session)
+- [ ] Dashboard view (task list, filters)
+- [ ] My Tasks view
+- [ ] Task detail view
+- [ ] Status update flow
+- [ ] Real-time notifications (Socket.io)
+
+#### Phase 2: Full Feature Parity
+- [ ] Task creation (Manager)
+- [ ] Task editing/deletion
+- [ ] Comments system
+- [ ] Team member management
+- [ ] Team switching
+
+#### Phase 3: Polish & Release
+- [ ] UI polish and animations
+- [ ] Error handling improvements
+- [ ] Performance optimization
+- [ ] App store preparation (icons, screenshots, metadata)
 
