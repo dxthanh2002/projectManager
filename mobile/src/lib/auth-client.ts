@@ -3,9 +3,12 @@ import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 
 // Base URL của Better Auth backend
-// Development: dùng IP máy tính của bạn thay vì localhost
-// Production: dùng URL production server
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+// Development: 
+//   - Android Emulator: 10.0.2.2 (alias for host localhost)
+//   - iOS Simulator: localhost
+//   - Physical device: use your machine's IP (e.g., 192.168.1.100)
+// Production: use production server URL
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:5001";
 
 export const authClient = createAuthClient({
     baseURL: BASE_URL,

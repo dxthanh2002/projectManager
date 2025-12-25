@@ -1,14 +1,24 @@
 # Mobile Architecture - ManagerCheck
 
-**Generated:** 2025-12-24
-**Type:** React Native / Expo Mobile App
-**Pattern:** File-based Routing (expo-router)
+**Generated:** 2025-12-25  
+**Type:** React Native / Expo Mobile App  
+**Stack:** Expo 54 + React Native 0.81.5 + React 19  
 
 ---
 
 ## Executive Summary
 
-The mobile app is built with **Expo 51** and **React Native 0.74**, using **expo-router** for file-based navigation. It uses **Formik + Yup** for form handling and **Axios** for API communication with the existing backend.
+The ManagerCheck mobile app is built with **Expo 54** and **React Native 0.81.5**, leveraging the **New Architecture** (Fabric + TurboModules) and **React 19** features including the React Compiler. Authentication is handled via **better-auth/expo** with secure storage using `expo-secure-store`.
+
+### Key Technology Highlights
+
+| Feature | Description |
+|---------|-------------|
+| **New Architecture** | Native module system with Fabric renderer enabled |
+| **React 19** | Latest React with concurrent features |
+| **React Compiler** | Automatic memoization (experimental) |
+| **Typed Routes** | Type-safe navigation with expo-router |
+| **Secure Auth** | better-auth with SecureStore persistence |
 
 ---
 
@@ -16,34 +26,54 @@ The mobile app is built with **Expo 51** and **React Native 0.74**, using **expo
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         MOBILE APP (Expo)                                │
-│                                                                          │
+│                         MOBILE APP (Expo 54)                            │
+│                                                                         │
 │  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │                      expo-router (File-based)                     │  │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐                 │  │
-│  │  │  (auth)    │  │  (tabs)    │  │  (user)    │                 │  │
-│  │  │  Group     │  │  Group     │  │  Group     │                 │  │
-│  │  └────────────┘  └────────────┘  └────────────┘                 │  │
+│  │                    expo-router v6 (File-based)                    │  │
+│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐                  │  │
+│  │  │  (auth)    │  │  (tabs)    │  │  (user)    │                  │  │
+│  │  │  Group     │  │  Group     │  │  Group     │                  │  │
+│  │  └────────────┘  └────────────┘  └────────────┘                  │  │
 │  └──────────────────────────────────────────────────────────────────┘  │
-│                                 │                                        │
-│  ┌──────────────────────────────▼──────────────────────────────────┐  │
-│  │                        Components (32)                           │  │
-│  │  button | input | loading | home | todo | library | example     │  │
-│  └──────────────────────────────────────────────────────────────────┘  │
-│                                 │                                        │
-│  ┌──────────────────────────────▼──────────────────────────────────┐  │
-│  │                    Context / State                               │  │
-│  │           React Context + AsyncStorage                           │  │
-│  └──────────────────────────────────────────────────────────────────┘  │
-│                                 │                                        │
-│  ┌──────────────────────────────▼──────────────────────────────────┐  │
-│  │                      Axios (API Client)                          │  │
-│  └──────────────────────────────────────────────────────────────────┘  │
+│                                 │                                       │
+│  ┌──────────────────────────────▼──────────────────────────────────┐   │
+│  │                        Components                                │   │
+│  │  ThemedText | ThemedView | IconSymbol | HapticTab | Collapsible │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                 │                                       │
+│  ┌──────────────────────────────▼──────────────────────────────────┐   │
+│  │                    State & Auth Layer                            │   │
+│  │         React Context + better-auth/expo + SecureStore           │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                 │                                       │
+│  ┌──────────────────────────────▼──────────────────────────────────┐   │
+│  │                      API Client (authClient)                     │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────┼───────────────────────────────────────┘
                                   │
-                                  ▼ HTTP/REST
-                    Backend API (Express 5) Port 5001
+                                  ▼ HTTP/REST + WebSocket
+                    Backend API (Express 5) Port 3000
 ```
+
+---
+
+## Technology Stack
+
+| Category | Technology | Version | Purpose |
+|----------|------------|---------|---------|
+| **Runtime** | Expo | 54.0.30 | Development platform |
+| **Framework** | React Native | 0.81.5 | Mobile UI framework |
+| **UI Library** | React | 19.1.0 | Component model |
+| **Language** | TypeScript | 5.9.2 | Type safety |
+| **Navigation** | expo-router | 6.0.21 | File-based routing |
+| **Navigation** | @react-navigation | 7.x | Navigation primitives |
+| **Auth** | better-auth | 1.4.9 | Authentication |
+| **Auth Plugin** | @better-auth/expo | 1.4.9 | Expo integration |
+| **Secure Storage** | expo-secure-store | 15.0.8 | Encrypted credential storage |
+| **Image** | expo-image | 3.0.11 | Optimized image handling |
+| **Animation** | react-native-reanimated | 4.1.1 | Performant animations |
+| **Gestures** | react-native-gesture-handler | 2.28.0 | Touch handling |
+| **Haptics** | expo-haptics | 15.0.8 | Tactile feedback |
 
 ---
 
@@ -53,332 +83,364 @@ The mobile app is built with **Expo 51** and **React Native 0.74**, using **expo
 mobile/
 ├── app.json                 # Expo configuration
 ├── package.json             # Dependencies
-├── babel.config.js          # Babel configuration
 ├── tsconfig.json            # TypeScript config
 ├── src/
-│   ├── app/                 # expo-router routes (21 items)
-│   │   ├── _layout.tsx      # Root layout
-│   │   ├── index.tsx        # Entry screen
-│   │   ├── (auth)/          # Auth route group (5 items)
-│   │   ├── (tabs)/          # Tab navigation group (7 items)
-│   │   ├── (user)/          # User route group (1 item)
-│   │   ├── like/            # Like screens (2 items)
-│   │   └── product/         # Product screens (4 items)
-│   ├── components/          # Reusable components (32 items)
-│   │   ├── button/          # Button variants
-│   │   ├── input/           # Input components
-│   │   ├── loading/         # Loading indicators
-│   │   ├── home/            # Home screen components
-│   │   ├── todo/            # Todo list components
-│   │   ├── library/         # Shared library components
-│   │   ├── CustomFlatList/  # Custom list component
-│   │   └── example/         # Example components
-│   ├── context/             # React Context (1 item)
-│   ├── types/               # TypeScript definitions (4 items)
-│   ├── utils/               # Utility functions (4 items)
-│   ├── data/                # Static data/mock (1 item)
-│   └── assets/              # Images, icons (36 items)
+│   ├── app/                 # expo-router routes
+│   │   ├── _layout.tsx      # Root layout (Stack + ThemeProvider)
+│   │   ├── modal.tsx        # Modal screen
+│   │   ├── (auth)/          # Auth route group (empty - to implement)
+│   │   ├── (tabs)/          # Tab navigation group
+│   │   │   ├── _layout.tsx  # Tab bar configuration
+│   │   │   ├── index.tsx    # Home tab
+│   │   │   └── explore.tsx  # Explore tab
+│   │   └── (user)/          # User profile routes
+│   ├── components/          # Reusable UI components
+│   │   ├── themed-text.tsx  # Theme-aware Text
+│   │   ├── themed-view.tsx  # Theme-aware View
+│   │   ├── haptic-tab.tsx   # Tab with haptic feedback
+│   │   ├── collapsible.tsx  # Expandable content
+│   │   ├── parallax-scroll-view.tsx
+│   │   ├── external-link.tsx
+│   │   ├── hello-wave.tsx
+│   │   └── ui/              # Core UI components
+│   │       ├── collapsible.tsx
+│   │       ├── icon-symbol.tsx
+│   │       └── icon-symbol.ios.tsx
+│   ├── context/             # React Context providers
+│   │   └── app.context.tsx  # Theme context
+│   ├── hooks/               # Custom React hooks
+│   │   ├── use-color-scheme.ts
+│   │   ├── use-color-scheme.web.ts
+│   │   └── use-theme-color.ts
+│   ├── lib/                 # Library integrations
+│   │   └── auth-client.ts   # better-auth client setup
+│   ├── constants/           # App constants
+│   │   └── theme.ts         # Color definitions
+│   └── assets/              # Images, icons
 ```
 
 ---
 
-## Technology Stack
+## Expo Configuration
 
-| Category | Technology | Version | Purpose |
-|----------|------------|---------|---------|
-| Framework | Expo | 51.0.22 | Development platform |
-| Runtime | React Native | 0.74.3 | Mobile UI framework |
-| Language | TypeScript | 5.3.3 | Type safety |
-| Navigation | expo-router | 3.5.23 | File-based routing |
-| Navigation | @react-navigation | 6.x | Navigation primitives |
-| Forms | Formik | 2.4.6 | Form management |
-| Validation | Yup | 1.6.1 | Schema validation |
-| HTTP | Axios | 1.7.5 | API client |
-| Storage | AsyncStorage | 1.23.1 | Local persistence |
-| Animation | react-native-reanimated | 3.10.1 | Animations |
-| Gestures | react-native-gesture-handler | 2.16.1 | Touch handling |
+### app.json Key Settings
 
----
-
-## Routing Structure
-
-### Route Groups
-
-| Group | Path | Purpose |
-|-------|------|---------|
-| `(auth)` | `/auth/*` | Authentication screens (5 items) |
-| `(tabs)` | `/tabs/*` | Main tab navigation (7 items) |
-| `(user)` | `/user/*` | User profile screens (1 item) |
-| `like` | `/like/*` | Like/favorite screens (2 items) |
-| `product` | `/product/*` | Product detail screens (4 items) |
-
-### Root Layout (`_layout.tsx`)
-- Stack navigator for root navigation
-- Auth state management
-- Global providers setup
-
----
-
-## Component Organization
-
-| Directory | Items | Purpose |
-|-----------|-------|---------|
-| `button/` | 5 | Button variants and styles |
-| `input/` | 1 | Text input components |
-| `loading/` | 1 | Loading indicators |
-| `home/` | 5 | Home screen specific |
-| `todo/` | 3 | Todo list components |
-| `library/` | 6 | Shared library components |
-| `CustomFlatList/` | 2 | Optimized list component |
-| `example/` | 9 | Example/demo components |
-
----
-
-## Development Commands
-
-```bash
-# Install dependencies
-cd mobile
-npm install
-
-# Start development server
-npm start
-# or
-npm run dev
-
-# Run on Android
-npm run android
-
-# Run on iOS
-npm run ios
+```json
+{
+  "expo": {
+    "scheme": "mobile",           // Deep link scheme
+    "newArchEnabled": true,       // New Architecture (Fabric + TurboModules)
+    "experiments": {
+      "typedRoutes": true,        // Type-safe navigation
+      "reactCompiler": true       // Automatic memoization
+    },
+    "android": {
+      "edgeToEdgeEnabled": true   // Full-screen UI
+    }
+  }
+}
 ```
 
-### Quick Start
-
-```bash
-# From project root
-cd mobile
-npm install
-npm run android   # For Android emulator/device
-```
-
----
-
-## Environment Configuration
-
-```env
-# mobile/.env
-API_URL=http://localhost:5001
-# For physical device, use your machine's IP:
-# API_URL=http://192.168.x.x:5001
-```
-
----
-
-## Integration with Backend
-
-The mobile app will connect to the same backend as the web frontend:
-
-| Backend Endpoint | Mobile Usage |
-|-----------------|--------------|
-| `/api/auth/*` | Authentication (better-auth) |
-| `/api/teams` | Team management |
-| `/api/teams/:id/tasks` | Task operations |
-| `/api/tasks/:id/comments` | Comments |
-| WebSocket (Socket.io) | Real-time notifications |
+### New Architecture Benefits
+- **Fabric Renderer**: More responsive UI with synchronous layout
+- **TurboModules**: Faster native module loading
+- **Codegen**: Type-safe native bindings
 
 ---
 
 ## Architecture Decisions
 
-_This section contains key architectural decisions for the mobile app implementation._
+### Decision 1: Authentication Strategy
+
+**Status:** Approved  
+**Date:** 2025-12-25
+
+#### Context
+The web app uses better-auth with session cookies. Mobile requires a different token storage mechanism that's secure and persistent.
+
+#### Decision
+Use **better-auth/expo** plugin with **expo-secure-store** for encrypted credential storage.
+
+#### Implementation
+
+```typescript
+// lib/auth-client.ts
+import { createAuthClient } from "better-auth/react";
+import { expoClient } from "@better-auth/expo/client";
+import * as SecureStore from "expo-secure-store";
+
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+
+export const authClient = createAuthClient({
+    baseURL: BASE_URL,
+    plugins: [
+        expoClient({
+            scheme: "mobile",      // Must match app.json scheme
+            storagePrefix: "mobile",
+            storage: SecureStore,  // Encrypted storage
+        }),
+    ],
+});
+
+// Export convenience methods
+export const { signIn, signUp, signOut, useSession } = authClient;
+```
+
+#### Usage Pattern
+```typescript
+// In components
+import { useSession, signIn, signOut } from "@/lib/auth-client";
+
+function ProfileScreen() {
+  const { data: session, isPending } = useSession();
+  
+  if (isPending) return <Loading />;
+  if (!session) return <LoginScreen />;
+  
+  return <UserProfile user={session.user} />;
+}
+```
+
+#### Security Benefits
+- **SecureStore**: Uses Keychain (iOS) / Keystore (Android)
+- **Encrypted**: Credentials encrypted at rest
+- **Automatic**: Token refresh handled by better-auth
 
 ---
 
-### Decision 1: Navigation Architecture
+### Decision 2: Navigation Architecture
 
 **Status:** Approved  
-**Date:** 2025-12-24
+**Date:** 2025-12-25
 
 #### Context
-The mobile app requires a navigation structure that supports authenticated flows, tab-based main navigation, and team context switching similar to the web app.
+The app needs authenticated and unauthenticated flows with tab-based main navigation.
 
 #### Decision
-Use **expo-router** with a hybrid navigation pattern:
+Use **expo-router v6** with route groups and Stack/Tab hybrid navigation.
 
+#### Current Structure
 ```
 src/app/
-├── _layout.tsx              # Root: Auth check + Stack navigator
-├── index.tsx                # Entry: Redirect based on auth state
-├── (auth)/                  # Auth group (unauthenticated only)
-│   ├── _layout.tsx          # Stack for auth screens
-│   ├── login.tsx
-│   └── signup.tsx
-├── (main)/                  # Main app group (authenticated)
-│   ├── _layout.tsx          # Drawer + Bottom tabs hybrid
-│   ├── (tabs)/              # Bottom tab navigation
-│   │   ├── _layout.tsx      # Tab bar config
-│   │   ├── dashboard.tsx    # Manager dashboard
-│   │   ├── my-tasks.tsx     # Member tasks
-│   │   └── notifications.tsx
-│   ├── task/[id].tsx        # Task detail (modal/stack)
-│   └── team/[teamId]/       # Team context routes
-│       ├── members.tsx
-│       └── settings.tsx
+├── _layout.tsx              # Root: Stack navigator + ThemeProvider
+├── modal.tsx                # Modal presentation
+├── (auth)/                  # Unauthenticated routes (login, signup)
+├── (tabs)/                  # Main app tabs
+│   ├── _layout.tsx          # Tab bar with haptic feedback
+│   ├── index.tsx            # Home/Dashboard
+│   └── explore.tsx          # Explore/Search
+└── (user)/                  # User-related screens
 ```
 
-#### Rationale
-- **expo-router v3** provides file-based routing consistency with modern patterns
-- **Drawer** enables team switching (mirroring web sidebar)
-- **Bottom Tabs** provides quick access to main features
-- **Stack** within groups handles detail screens
-
----
-
-### Decision 2: State Management
-
-**Status:** Approved  
-**Date:** 2025-12-24
-
-#### Context
-The web app uses Pinia (5 stores). Mobile needs equivalent state management that works with React Native and handles async persistence.
-
-#### Decision
-Use **React Context + Hooks** pattern (not Redux/Zustand) for simplicity:
-
+#### Root Layout Pattern
 ```typescript
-// contexts/
-├── AuthContext.tsx      // User session, login/logout
-├── TeamContext.tsx      // Current team, team list, members
-├── TaskContext.tsx      // Tasks, filters, CRUD operations
-├── NotificationContext.tsx  // Real-time notifications, toast queue
-└── AppContext.tsx       // App-wide providers wrapper
-```
+// _layout.tsx
+export default function RootLayout() {
+  const colorScheme = useColorScheme();
 
-#### Key Patterns
-```typescript
-// AuthContext example
-interface AuthState {
-  user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType>(null);
-
-export function AuthProvider({ children }) {
-  const [state, dispatch] = useReducer(authReducer, initialState);
-  
-  // Persist session to AsyncStorage
-  useEffect(() => {
-    if (state.session) {
-      AsyncStorage.setItem('session', JSON.stringify(state.session));
-    }
-  }, [state.session]);
-  
-  return <AuthContext.Provider value={{ state, dispatch }}>{children}</AuthContext.Provider>;
+  return (
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+      </Stack>
+      <StatusBar style="auto" />
+    </ThemeProvider>
+  );
 }
 ```
 
-#### Rationale
-- **Matches Web pattern** conceptually (contexts ≈ Pinia stores)
-- **No additional dependencies** - React Context is built-in
-- **AsyncStorage integration** for persistence
-- **Simple mental model** for small-medium app
+#### Tab Layout with Haptics
+```typescript
+// (tabs)/_layout.tsx
+export default function TabLayout() {
+  const colorScheme = useColorScheme();
+
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        headerShown: false,
+        tabBarButton: HapticTab,  // Haptic feedback on tab press
+      }}>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+        }}
+      />
+      {/* More tabs */}
+    </Tabs>
+  );
+}
+```
 
 ---
 
-### Decision 3: API Integration
+### Decision 3: Theming System
 
 **Status:** Approved  
-**Date:** 2025-12-24
+**Date:** 2025-12-25
 
 #### Context
-Mobile app must communicate with existing Express backend. Need consistent API handling, error management, and auth token attachment.
+App needs to support light/dark mode with system preference detection.
 
 #### Decision
-Use **Axios** with centralized interceptors:
+Use **React Navigation themes** + custom themed components.
+
+#### Implementation
 
 ```typescript
-// lib/api.ts
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
+// hooks/use-color-scheme.ts
+import { useColorScheme as useRNColorScheme } from 'react-native';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:5001';
+export function useColorScheme() {
+  return useRNColorScheme();  // Returns 'light' | 'dark' | null
+}
 
-export const api = axios.create({
-  baseURL: `${API_URL}/api`,
-  timeout: 10000,
-  headers: { 'Content-Type': 'application/json' },
-});
+// components/themed-text.tsx
+import { Text, type TextProps, StyleSheet } from 'react-native';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
-// Request interceptor: Attach auth token
-api.interceptors.request.use(async (config) => {
-  const session = await AsyncStorage.getItem('session');
-  if (session) {
-    const { token } = JSON.parse(session);
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Response interceptor: Handle errors
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      // Clear session and redirect to login
-      await AsyncStorage.removeItem('session');
-      router.replace('/login');
-    }
-    return Promise.reject(error);
-  }
-);
+export function ThemedText({ style, lightColor, darkColor, ...rest }: ThemedTextProps) {
+  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  return <Text style={[{ color }, style]} {...rest} />;
+}
 ```
 
-#### API Service Pattern
+#### Color Constants
 ```typescript
-// services/taskService.ts
-export const taskService = {
-  getTeamTasks: (teamId: string) => api.get(`/teams/${teamId}/tasks`),
-  createTask: (teamId: string, data: CreateTaskDto) => api.post(`/teams/${teamId}/tasks`, data),
-  updateStatus: (taskId: string, status: TaskStatus) => api.patch(`/tasks/${taskId}/status`, { status }),
-  // ...
+// constants/theme.ts
+export const Colors = {
+  light: {
+    text: '#11181C',
+    background: '#fff',
+    tint: '#0a7ea4',
+    icon: '#687076',
+  },
+  dark: {
+    text: '#ECEDEE',
+    background: '#151718',
+    tint: '#fff',
+    icon: '#9BA1A6',
+  },
 };
 ```
 
 ---
 
-### Decision 4: Real-Time Integration
+### Decision 4: Component Architecture
 
 **Status:** Approved  
-**Date:** 2025-12-24
+**Date:** 2025-12-25
 
 #### Context
-Web app uses Socket.io for real-time notifications. Mobile must have identical real-time behavior using same events.
+Need reusable, platform-aware components with consistent styling.
 
 #### Decision
-Use **socket.io-client** with team room pattern:
+Create a component library with platform-specific implementations where needed.
+
+#### Platform-Specific Pattern
+```typescript
+// components/ui/icon-symbol.tsx (Android/Web)
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+export function IconSymbol({ name, size, color }: IconSymbolProps) {
+  return <MaterialIcons name={MAPPING[name]} size={size} color={color} />;
+}
+
+// components/ui/icon-symbol.ios.tsx (iOS)
+import { SymbolView } from 'expo-symbols';
+
+export function IconSymbol({ name, size, color, weight }: IconSymbolProps) {
+  return <SymbolView name={name} size={size} tintColor={color} weight={weight} />;
+}
+```
+
+#### Haptic Tab Component
+```typescript
+// components/haptic-tab.tsx
+import * as Haptics from 'expo-haptics';
+
+export function HapticTab(props: BottomTabBarButtonProps) {
+  return (
+    <Pressable
+      {...props}
+      onPressIn={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+    />
+  );
+}
+```
+
+---
+
+### Decision 5: API Integration (To Implement)
+
+**Status:** Planned  
+**Date:** 2025-12-25
+
+#### Context
+Need to communicate with existing Express backend for team/task operations.
+
+#### Planned Approach
+Extend `authClient` for API calls since it already handles:
+- Base URL configuration
+- Authentication headers
+- Token refresh
 
 ```typescript
-// lib/socket.ts
-import { io, Socket } from 'socket.io-client';
-import Constants from 'expo-constants';
+// lib/api.ts (Planned)
+import { authClient } from './auth-client';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:5001';
+// API calls through authClient fetch
+export const api = {
+  teams: {
+    list: () => authClient.$fetch('/api/teams'),
+    create: (data: CreateTeamDto) => authClient.$fetch('/api/teams', { 
+      method: 'POST', 
+      body: data 
+    }),
+  },
+  tasks: {
+    byTeam: (teamId: string) => authClient.$fetch(`/api/teams/${teamId}/tasks`),
+    updateStatus: (taskId: string, status: string) => 
+      authClient.$fetch(`/api/tasks/${taskId}/status`, { 
+        method: 'PATCH', 
+        body: { status } 
+      }),
+  },
+};
+```
+
+---
+
+### Decision 6: Real-Time Notifications (To Implement)
+
+**Status:** Planned  
+**Date:** 2025-12-25
+
+#### Context
+Web app uses Socket.io for real-time updates. Mobile needs same functionality.
+
+#### Planned Approach
+Use **socket.io-client** with authentication from better-auth session.
+
+```typescript
+// lib/socket.ts (Planned)
+import { io, Socket } from 'socket.io-client';
+import { authClient } from './auth-client';
 
 let socket: Socket | null = null;
 
-export function initSocket(sessionToken: string) {
-  socket = io(API_URL, {
-    autoConnect: true,
-    transports: ['websocket'],
-    auth: { token: sessionToken },
-  });
+export async function initSocket() {
+  const session = await authClient.getSession();
+  if (!session) return null;
   
-  socket.on('connect', () => console.log('Socket connected'));
-  socket.on('disconnect', () => console.log('Socket disconnected'));
+  socket = io(process.env.EXPO_PUBLIC_API_URL!, {
+    transports: ['websocket'],
+    auth: { token: session.token },
+  });
   
   return socket;
 }
@@ -387,125 +449,89 @@ export function joinTeam(teamId: string) {
   socket?.emit('join:team', teamId);
 }
 
-export function leaveTeam(teamId: string) {
-  socket?.emit('leave:team', teamId);
-}
-
-export function onTaskAssigned(callback: (data: TaskAssignedEvent) => void) {
+export function onTaskAssigned(callback: (data: any) => void) {
   socket?.on('task:assigned', callback);
 }
-
-export function onTaskStatusChanged(callback: (data: TaskStatusEvent) => void) {
-  socket?.on('task:status_changed', callback);
-}
-
-export function onCommentAdded(callback: (data: CommentAddedEvent) => void) {
-  socket?.on('comment:added', callback);
-}
-```
-
-#### Integration with Context
-```typescript
-// In NotificationContext
-useEffect(() => {
-  if (session) {
-    const socket = initSocket(session.token);
-    
-    onTaskAssigned((data) => {
-      dispatch({ type: 'ADD_NOTIFICATION', payload: { type: 'task_assigned', ...data } });
-      showToast(`New task: ${data.title}`);
-    });
-    
-    return () => socket.disconnect();
-  }
-}, [session]);
 ```
 
 ---
 
-### Decision 5: Authentication Strategy
+## Development Commands
 
-**Status:** Approved  
-**Date:** 2025-12-24
+```bash
+# Install dependencies
+cd mobile
+bun install   # or npm install
 
-#### Context
-Web uses better-auth with session cookies. Mobile cannot use cookies the same way - need token-based approach.
+# Start development server
+bun run start
 
-#### Decision
-**Token-based authentication** with AsyncStorage persistence:
+# Run on Android
+bun run android
 
-#### Flow
-1. **Login**: Call `/api/auth/sign-in/email` → receive session token
-2. **Store**: Save token to AsyncStorage
-3. **Use**: Attach token in Authorization header for all API calls
-4. **Persist**: On app start, check AsyncStorage for existing session
-5. **Logout**: Clear AsyncStorage, reset context, redirect to login
+# Run on iOS
+bun run ios
 
-```typescript
-// Auth flow implementation
-async function login(email: string, password: string) {
-  const response = await api.post('/auth/sign-in/email', { email, password });
-  const { session, user } = response.data;
-  
-  await AsyncStorage.setItem('session', JSON.stringify(session));
-  await AsyncStorage.setItem('user', JSON.stringify(user));
-  
-  dispatch({ type: 'LOGIN_SUCCESS', payload: { session, user } });
-  initSocket(session.token);
-  router.replace('/(main)/(tabs)/dashboard');
-}
+# Run on Web
+bun run web
 
-async function checkSession() {
-  const sessionStr = await AsyncStorage.getItem('session');
-  if (sessionStr) {
-    const session = JSON.parse(sessionStr);
-    // Validate session with backend
-    try {
-      const { data } = await api.get('/me');
-      dispatch({ type: 'RESTORE_SESSION', payload: data });
-    } catch {
-      await AsyncStorage.clear();
-    }
-  }
-}
+# Lint code
+bun run lint
 ```
 
 ---
 
-### Decision 6: Offline Handling (Future)
+## Environment Configuration
 
-**Status:** Deferred  
-**Date:** 2025-12-24
+```env
+# mobile/.env
+EXPO_PUBLIC_API_URL=http://192.168.x.x:3000
+```
 
-#### Decision
-**Online-only for MVP**. Graceful error handling when offline:
-- Show "No connection" banner
-- Disable form submissions
-- Queue local optimistic updates for retry when online
+> **Note:** Use your machine's local IP for physical device testing, not `localhost`.
 
 ---
 
-## Current State
+## Current State vs. Planned Features
 
-### ✅ In Place
-- Expo 51 project setup
-- expo-router file-based navigation
-- Route groups (auth, tabs, user)
-- 32 reusable components
-- TypeScript configuration
-- Formik + Yup form handling
+### ✅ Implemented
+- [x] Expo 54 project with New Architecture
+- [x] expo-router v6 file-based navigation
+- [x] better-auth/expo client setup
+- [x] expo-secure-store for credential storage
+- [x] Theme system (light/dark mode)
+- [x] Tab navigation with haptic feedback
+- [x] Themed components (Text, View)
+- [x] Platform-specific icons (SF Symbols / Material Icons)
+- [x] React 19 with experimental React Compiler
 
 ### 🔄 To Be Implemented
-- [ ] **AuthContext** with AsyncStorage persistence
-- [ ] **API interceptors** with error handling
-- [ ] **Socket.io client** with team room pattern
-- [ ] **TaskContext** with CRUD operations
-- [ ] **Navigation restructure** for ManagerCheck flows
-- [ ] **Task screens** (list, detail, create)
-- [ ] **Team screens** (members, switcher)
-- [ ] **Notification system** with toast
+- [ ] Auth screens (login, signup) in `(auth)` group
+- [ ] Auth state guard in root layout
+- [ ] Team context and task context
+- [ ] Dashboard screen (task list, filters)
+- [ ] Task detail screen
+- [ ] Create/edit task modals
+- [ ] Socket.io real-time integration
+- [ ] Notification system
 
 ---
 
-**Last Updated:** 2025-12-24
-**Version:** 2.0.0 (Architecture Decisions Added)
+## Backend Integration Reference
+
+The mobile app connects to the same backend as the web frontend:
+
+| Backend Endpoint | Mobile Usage |
+|-----------------|--------------|
+| `/api/auth/sign-in/email` | Email login |
+| `/api/auth/sign-up/email` | Email registration |
+| `/api/auth/sign-out` | Logout |
+| `/api/teams` | Team CRUD |
+| `/api/teams/:id/tasks` | Task operations |
+| `/api/tasks/:id/comments` | Comments |
+| WebSocket (Socket.io) | Real-time notifications |
+
+---
+
+**Last Updated:** 2025-12-25  
+**Version:** 3.0.0 (Complete Rewrite for Expo 54)

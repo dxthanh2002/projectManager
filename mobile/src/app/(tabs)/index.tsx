@@ -1,98 +1,211 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSession, signOut } from '@/lib/auth-client';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function DashboardScreen() {
+  const { data: session, isPending } = useSession();
+  const router = useRouter();
 
-export default function HomeScreen() {
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/(auth)/login');
+          },
+        },
+      ]
+    );
+  };
+
+  if (isPending) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!session) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>No session found</Text>
+      </View>
+    );
+  }
+
+  const { user } = session;
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.greeting}>Welcome back! 👋</Text>
+        <Text style={styles.userName}>{user.name}</Text>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      {/* User Info Card */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>User Information</Text>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Name</Text>
+          <Text style={styles.value}>{user.name}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Email</Text>
+          <Text style={styles.value}>{user.email}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>User ID</Text>
+          <Text style={[styles.value, styles.mono]}>{user.id}</Text>
+        </View>
+
+        {user.createdAt && (
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Joined</Text>
+            <Text style={styles.value}>
+              {new Date(user.createdAt).toLocaleDateString()}
+            </Text>
+          </View>
+        )}
+
+        <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
+          <Text style={styles.label}>Email Verified</Text>
+          <Text style={[styles.value, user.emailVerified ? styles.verified : styles.notVerified]}>
+            {user.emailVerified ? '✓ Verified' : '✗ Not Verified'}
+          </Text>
+        </View>
+      </View>
+
+      {/* Session Info Card */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Session Info</Text>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Session ID</Text>
+          <Text style={[styles.value, styles.mono]} numberOfLines={1}>
+            {session.session?.id || 'N/A'}
+          </Text>
+        </View>
+
+        <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
+          <Text style={styles.label}>Expires</Text>
+          <Text style={styles.value}>
+            {session.session?.expiresAt
+              ? new Date(session.session.expiresAt).toLocaleString()
+              : 'N/A'
+            }
+          </Text>
+        </View>
+      </View>
+
+      {/* Logout Button */}
+      <Pressable style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutText}>Logout</Text>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    padding: 16,
+  },
+  header: {
+    marginTop: 48,
+    marginBottom: 24,
+  },
+  greeting: {
+    fontSize: 16,
+    color: '#687076',
+    marginBottom: 4,
+  },
+  userName: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#11181C',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#11181C',
+    marginBottom: 16,
+  },
+  infoRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  label: {
+    fontSize: 14,
+    color: '#687076',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  value: {
+    fontSize: 14,
+    color: '#11181C',
+    fontWeight: '500',
+    maxWidth: '60%',
+    textAlign: 'right',
+  },
+  mono: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+  },
+  verified: {
+    color: '#22c55e',
+  },
+  notVerified: {
+    color: '#ef4444',
+  },
+  logoutButton: {
+    backgroundColor: '#ef4444',
+    height: 56,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 'auto',
+    marginBottom: 32,
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#687076',
+    textAlign: 'center',
+    marginTop: 100,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ef4444',
+    textAlign: 'center',
+    marginTop: 100,
   },
 });

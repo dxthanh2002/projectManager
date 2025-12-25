@@ -486,15 +486,16 @@ ManagerCheck is a **Single Page Application (SPA)** built with Vue 3, communicat
 
 | Layer | Technology | Version |
 |-------|------------|---------|
-| Framework | React Native | 0.74.3 |
-| Platform | Expo | 51.0.22 |
-| Navigation | expo-router | 3.5.23 |
+| Framework | React Native | 0.81.5 |
+| Platform | Expo | 54.0.30 |
+| UI Library | React | 19.1.0 |
+| Navigation | expo-router | 6.0.21 |
+| Navigation | @react-navigation | 7.x |
 | State | React Context | Built-in |
-| Storage | AsyncStorage | 1.23.1 |
-| HTTP | Axios | 1.7.5 |
-| Forms | Formik + Yup | Latest |
-| Real-time | Socket.io-client | 4.8.1 |
-| Animations | Reanimated | 3.10.1 |
+| Auth | better-auth + @better-auth/expo | 1.4.9 |
+| Storage | expo-secure-store | 15.0.8 |
+| Real-time | Socket.io-client | (to add) |
+| Animations | Reanimated | 4.1.1 |
 
 ### Mobile Development Phases
 
