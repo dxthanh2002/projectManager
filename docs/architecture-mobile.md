@@ -49,79 +49,35 @@ The mobile app is built with **Expo 51** and **React Native 0.74**, using **expo
 
 ## Directory Structure
 
-> ⚠️ **Note:** Current `mobile/` folder contains old template project. Structure below is the **TARGET** for ManagerCheck.
-
 ```
-mobile/src/
-├── app/                         # expo-router routes
-│   ├── _layout.tsx              # Root: Auth check
-│   ├── index.tsx                # Entry → redirect
-│   │
-│   ├── (auth)/                  # 🔒 Auth screens
-│   │   ├── _layout.tsx
-│   │   ├── login.tsx
-│   │   ├── signup.tsx
-│   │   └── welcome.tsx
-│   │
-│   └── (main)/                  # 🔐 Authenticated
-│       ├── _layout.tsx          # Drawer + Tabs
-│       ├── (tabs)/              # Bottom tabs
-│       │   ├── _layout.tsx
-│       │   ├── dashboard.tsx    # Manager view
-│       │   ├── my-tasks.tsx     # Member view
-│       │   └── notifications.tsx
-│       ├── task/
-│       │   ├── [id].tsx         # Task detail
-│       │   ├── create.tsx       # Create task
-│       │   └── edit/[id].tsx    # Edit task
-│       ├── team/
-│       │   ├── [teamId]/
-│       │   │   ├── index.tsx
-│       │   │   ├── members.tsx
-│       │   │   └── invite.tsx
-│       │   └── create.tsx
-│       └── settings/index.tsx
-│
-├── components/                  # UI Components
-│   ├── ui/                      # Base: Button, Input, Card, Badge, Modal
-│   ├── task/                    # TaskCard, StatusBadge, PriorityBadge, TaskForm
-│   ├── team/                    # TeamSwitcher, MemberCard, InviteForm
-│   ├── comment/                 # CommentCard, CommentList, CommentInput
-│   ├── notification/            # NotificationCard, Badge
-│   └── layout/                  # Header, TabBar, DrawerContent
-│
-├── contexts/                    # State Management
-│   ├── AuthContext.tsx          # Auth state
-│   ├── TeamContext.tsx          # Teams, members
-│   ├── TaskContext.tsx          # Tasks, filters
-│   ├── NotificationContext.tsx  # Real-time
-│   └── AppProviders.tsx         # Combined wrapper
-│
-├── services/                    # API Layer
-│   ├── api.ts                   # Axios + interceptors
-│   ├── authService.ts
-│   ├── teamService.ts
-│   ├── taskService.ts
-│   └── commentService.ts
-│
-├── lib/                         # Utilities
-│   ├── socket.ts                # Socket.io client
-│   ├── storage.ts               # AsyncStorage helpers
-│   └── constants.ts
-│
-├── hooks/                       # Custom Hooks
-│   ├── useAuth.ts
-│   ├── useTeam.ts
-│   ├── useTasks.ts
-│   └── useNotifications.ts
-│
-├── types/                       # TypeScript
-│   ├── auth.ts
-│   ├── team.ts
-│   ├── task.ts
-│   └── comment.ts
-│
-└── assets/                      # Images, icons
+mobile/
+├── app.json                 # Expo configuration
+├── package.json             # Dependencies
+├── babel.config.js          # Babel configuration
+├── tsconfig.json            # TypeScript config
+├── src/
+│   ├── app/                 # expo-router routes (21 items)
+│   │   ├── _layout.tsx      # Root layout
+│   │   ├── index.tsx        # Entry screen
+│   │   ├── (auth)/          # Auth route group (5 items)
+│   │   ├── (tabs)/          # Tab navigation group (7 items)
+│   │   ├── (user)/          # User route group (1 item)
+│   │   ├── like/            # Like screens (2 items)
+│   │   └── product/         # Product screens (4 items)
+│   ├── components/          # Reusable components (32 items)
+│   │   ├── button/          # Button variants
+│   │   ├── input/           # Input components
+│   │   ├── loading/         # Loading indicators
+│   │   ├── home/            # Home screen components
+│   │   ├── todo/            # Todo list components
+│   │   ├── library/         # Shared library components
+│   │   ├── CustomFlatList/  # Custom list component
+│   │   └── example/         # Example components
+│   ├── context/             # React Context (1 item)
+│   ├── types/               # TypeScript definitions (4 items)
+│   ├── utils/               # Utility functions (4 items)
+│   ├── data/                # Static data/mock (1 item)
+│   └── assets/              # Images, icons (36 items)
 ```
 
 ---
