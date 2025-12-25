@@ -38,7 +38,12 @@ The ManagerCheck mobile app is built with **Expo 54** and **React Native 0.81.5*
 │                                 │                                       │
 │  ┌──────────────────────────────▼──────────────────────────────────┐   │
 │  │                        Components                                │   │
-│  │  ThemedText | ThemedView | IconSymbol | HapticTab | Collapsible │   │
+│  │  ThemedText | ThemedView | IconSymbol | react-native-paper       │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                 │                                       │
+│  ┌──────────────────────────────▼──────────────────────────────────┐   │
+│  │                 Data Fetching & State Layer                      │   │
+│  │           TanStack Query + Zustand + React Hook Form             │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
 │                                 │                                       │
 │  ┌──────────────────────────────▼──────────────────────────────────┐   │
@@ -47,7 +52,7 @@ The ManagerCheck mobile app is built with **Expo 54** and **React Native 0.81.5*
 │  └──────────────────────────────────────────────────────────────────┘   │
 │                                 │                                       │
 │  ┌──────────────────────────────▼──────────────────────────────────┐   │
-│  │                      API Client (authClient)                     │   │
+│  │                API Client (fetch wrapper)                        │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────┼───────────────────────────────────────┘
                                   │
@@ -64,16 +69,20 @@ The ManagerCheck mobile app is built with **Expo 54** and **React Native 0.81.5*
 | **Runtime** | Expo | 54.0.30 | Development platform |
 | **Framework** | React Native | 0.81.5 | Mobile UI framework |
 | **UI Library** | React | 19.1.0 | Component model |
+| **UI Components**| react-native-paper | 5.14.5 | MD3 component library |
 | **Language** | TypeScript | 5.9.2 | Type safety |
 | **Navigation** | expo-router | 6.0.21 | File-based routing |
-| **Navigation** | @react-navigation | 7.x | Navigation primitives |
+| **Data Fetching** | TanStack Query | 5.90.12 | Server state & caching |
+| **State Management**| Zustand | 5.0.9 | Client state management |
+| **Forms** | React Hook Form | 7.69.0 | Performant form handling |
+| **Validation** | Zod | 4.2.1 | Schema validation |
 | **Auth** | better-auth | 1.4.9 | Authentication |
-| **Auth Plugin** | @better-auth/expo | 1.4.9 | Expo integration |
 | **Secure Storage** | expo-secure-store | 15.0.8 | Encrypted credential storage |
-| **Image** | expo-image | 3.0.11 | Optimized image handling |
+| **Real-time** | socket.io-client | 4.8.3 | WebSocket integration |
+| **Toast** | react-native-toast-message | 2.3.3 | Feedback notifications |
+| **Date** | date-fns | 4.1.0 | Date manipulation |
 | **Animation** | react-native-reanimated | 4.1.1 | Performant animations |
 | **Gestures** | react-native-gesture-handler | 2.28.0 | Touch handling |
-| **Haptics** | expo-haptics | 15.0.8 | Tactile feedback |
 
 ---
 
@@ -375,84 +384,80 @@ export function HapticTab(props: BottomTabBarButtonProps) {
 
 ---
 
-### Decision 5: API Integration (To Implement)
+### Decision 5: Data Fetching Strategy
 
-**Status:** Planned  
+**Status:** Approved  
 **Date:** 2025-12-25
 
 #### Context
-Need to communicate with existing Express backend for team/task operations.
+Need a robust way to handle server state, caching, loading states, and retries for Team/Task operations.
 
-#### Planned Approach
-Extend `authClient` for API calls since it already handles:
-- Base URL configuration
-- Authentication headers
-- Token refresh
+#### Decision
+Use **TanStack Query** (React Query) v5 for server state management and asynchronous data fetching.
+
+#### Implementation
+Create a custom `fetch` wrapper that integrates with `better-auth` cookies.
 
 ```typescript
-// lib/api.ts (Planned)
+// lib/api.ts
 import { authClient } from './auth-client';
 
-// API calls through authClient fetch
-export const api = {
-  teams: {
-    list: () => authClient.$fetch('/api/teams'),
-    create: (data: CreateTeamDto) => authClient.$fetch('/api/teams', { 
-      method: 'POST', 
-      body: data 
-    }),
-  },
-  tasks: {
-    byTeam: (teamId: string) => authClient.$fetch(`/api/teams/${teamId}/tasks`),
-    updateStatus: (taskId: string, status: string) => 
-      authClient.$fetch(`/api/tasks/${taskId}/status`, { 
-        method: 'PATCH', 
-        body: { status } 
-      }),
-  },
-};
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5001';
+
+export async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const cookies = authClient.getCookie();
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(cookies ? { Cookie: cookies } : {}),
+      ...options?.headers,
+    },
+  });
+  if (!res.ok) throw new Error(`API Error: ${res.status}`);
+  return res.json();
+}
 ```
 
 ---
 
-### Decision 6: Real-Time Notifications (To Implement)
+### Decision 6: Global Client State
 
-**Status:** Planned  
+**Status:** Approved  
 **Date:** 2025-12-25
 
 #### Context
-Web app uses Socket.io for real-time updates. Mobile needs same functionality.
+Need to manage global UI state (current team, notification counts) that doesn't belong in server state.
 
-#### Planned Approach
-Use **socket.io-client** with authentication from better-auth session.
+#### Decision
+Use **Zustand** for lightweight, hook-based global state management.
 
-```typescript
-// lib/socket.ts (Planned)
-import { io, Socket } from 'socket.io-client';
-import { authClient } from './auth-client';
+---
 
-let socket: Socket | null = null;
+### Decision 7: Form & Validation
 
-export async function initSocket() {
-  const session = await authClient.getSession();
-  if (!session) return null;
-  
-  socket = io(process.env.EXPO_PUBLIC_API_URL!, {
-    transports: ['websocket'],
-    auth: { token: session.token },
-  });
-  
-  return socket;
-}
+**Status:** Approved  
+**Date:** 2025-12-25
 
-export function joinTeam(teamId: string) {
-  socket?.emit('join:team', teamId);
-}
+#### Context
+Complex forms for Task creation and Team management require robust validation and performance.
 
-export function onTaskAssigned(callback: (data: any) => void) {
-  socket?.on('task:assigned', callback);
-}
-```
+#### Decision
+Use **React Hook Form** with **Zod** schema validation.
+
+---
+
+### Decision 8: Real-Time Notifications
+
+**Status:** Approved  
+**Date:** 2025-12-25
+
+#### Context
+Web app uses Socket.io for real-time updates. Mobile needs consistency.
+
+#### Decision
+Use **socket.io-client** with `transports: ['websocket']` and authentication via session cookies.
+
 
 ---
 
@@ -484,11 +489,15 @@ bun run lint
 ## Environment Configuration
 
 ```env
-# mobile/.env
-EXPO_PUBLIC_API_URL=http://192.168.x.x:3000
+# mobile/.env (gitignored - create manually)
+# For Android Emulator:
+EXPO_PUBLIC_API_URL=http://10.0.2.2:5001
+
+# For Physical Device (use your machine's IP):
+# EXPO_PUBLIC_API_URL=http://192.168.x.x:5001
 ```
 
-> **Note:** Use your machine's local IP for physical device testing, not `localhost`.
+> **Note:** Android Emulator uses `10.0.2.2` as alias for host localhost. For physical devices, use your machine's local IP.
 
 ---
 
@@ -504,12 +513,17 @@ EXPO_PUBLIC_API_URL=http://192.168.x.x:3000
 - [x] Themed components (Text, View)
 - [x] Platform-specific icons (SF Symbols / Material Icons)
 - [x] React 19 with experimental React Compiler
+- [x] **Metro config** for better-auth package exports
+- [x] **Auth screens** (login, signup) in `(auth)` group
+- [x] **Auth state guard** in root layout using `<Redirect>`
+- [x] **Dashboard screen** showing user info + logout
+- [x] **Library Stack:** TanStack Query, Zustand, React Hook Form, Zod, Paper, Socket.io, Toast, date-fns
 
 ### 🔄 To Be Implemented
-- [ ] Auth screens (login, signup) in `(auth)` group
-- [ ] Auth state guard in root layout
+- [ ] API layer setup (QueryProvider + fetch wrapper)
 - [ ] Team context and task context
-- [ ] Dashboard screen (task list, filters)
+- [ ] Team management screens
+- [ ] Task list screen with filters
 - [ ] Task detail screen
 - [ ] Create/edit task modals
 - [ ] Socket.io real-time integration

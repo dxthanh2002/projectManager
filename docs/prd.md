@@ -361,7 +361,7 @@ ManagerCheck is a **Single Page Application (SPA)** built with Vue 3, communicat
 ## Mobile App Requirements
 
 **Added:** 2025-12-24  
-**Stack:** React Native (Expo 51), expo-router, TypeScript
+**Stack:** React Native (Expo 54), expo-router v6, TypeScript, better-auth/expo
 
 ### Mobile Strategy
 

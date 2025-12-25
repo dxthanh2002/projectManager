@@ -1,7 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, Redirect, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import 'react-native-reanimated';
 
@@ -24,23 +23,6 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { data: session, isPending } = useSession();
   const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isPending) return; // Still loading session
-
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (!session && !inAuthGroup) {
-      // User is not logged in and not in auth group
-      // Redirect to login
-      router.replace('/(auth)/login');
-    } else if (session && inAuthGroup) {
-      // User is logged in but still in auth group
-      // Redirect to main app
-      router.replace('/(tabs)');
-    }
-  }, [session, isPending, segments]);
 
   // Show loading screen while checking session
   if (isPending) {
@@ -50,6 +32,19 @@ export default function RootLayout() {
         <StatusBar style="auto" />
       </ThemeProvider>
     );
+  }
+
+  const inAuthGroup = segments[0] === '(auth)';
+
+  // Handle redirects using Redirect component (safer than router.replace)
+  // Redirect to login if not authenticated and not in auth group
+  if (!session && !inAuthGroup) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  // Redirect to main app if authenticated but in auth group
+  if (session && inAuthGroup) {
+    return <Redirect href="/(tabs)" />;
   }
 
   return (
