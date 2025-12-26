@@ -1,9 +1,11 @@
 # Story 7.1: Team Switching (Drawer Navigation)
 
-Status: drafted
+Status: done
 Epic: 7 - Mobile Dashboard & Team Awareness
 Created: 2025-12-26
+Completed: 2025-12-26
 Author: Bob (Scrum Master)
+Implemented by: Amelia (Developer)
 
 ---
 

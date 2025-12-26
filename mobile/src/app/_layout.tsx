@@ -14,6 +14,7 @@ import {
   adaptNavigationTheme
 } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -30,7 +31,7 @@ const queryClient = new QueryClient({
 });
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: '(drawer)',
 };
 
 function LoadingScreen() {
@@ -64,28 +65,31 @@ export default function RootLayout() {
     }
 
     if (session && inAuthGroup) {
-      return <Redirect href="/(tabs)" />;
+      // @ts-ignore - dynamic route generated after build
+      return <Redirect href="/(drawer)" />;
     }
 
     return (
       <Stack>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
     );
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <PaperProvider theme={paperTheme}>
-        <ThemeProvider value={navTheme}>
-          {renderContent()}
-          <StatusBar style="auto" />
-          <Toast />
-        </ThemeProvider>
-      </PaperProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <PaperProvider theme={paperTheme}>
+          <ThemeProvider value={navTheme}>
+            {renderContent()}
+            <StatusBar style="auto" />
+            <Toast />
+          </ThemeProvider>
+        </PaperProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }
 

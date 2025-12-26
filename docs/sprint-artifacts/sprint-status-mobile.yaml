@@ -51,78 +51,90 @@ epic-6:
 # Epic 7: Mobile Dashboard & Team Awareness
 # Visibility and multi-team context switching
 epic-7:
-  status: in-progress
+  status: done
   priority: high
   goal: "Provide workload visibility and team switching"
   
   stories:
     7-1-team-switching-drawer:
-      status: in-progress
+      status: done
       title: "Team Switching (Drawer Navigation)"
       estimated_effort: medium
       dependencies: [6-3]
       tech_spec: "sprint-artifacts/7-1-team-switching.md"
+      completed: "2025-12-26"
       
     7-2-task-dashboard:
-      status: backlog
+      status: done
       title: "Task Dashboard (Manager/Member)"
       estimated_effort: large
       dependencies: [7-1]
       frs: [MFR2, MFR3, FR26, FR27, FR33, FR35]
+      tech_spec: "sprint-artifacts/7-2-task-dashboard.md"
+      completed: "2025-12-26"
       
   retrospective: optional
 
 # Epic 8: Mobile Task Execution & Communication
 # Real-time accountability and status reporting
 epic-8:
-  status: backlog
+  status: done
   priority: high
   goal: "Enable real-time task status reporting and comments"
   
   stories:
     8-1-task-detail-status:
-      status: backlog
+      status: done
       title: "Task Detail & Status Transitions"
       estimated_effort: large
       dependencies: [7-2]
       frs: [MFR4, FR28, FR29]
+      tech_spec: "sprint-artifacts/8-1-task-detail.md"
+      completed: "2025-12-26"
       
     8-2-realtime-mobile-comments:
-      status: backlog
+      status: done
       title: "Real-Time Mobile Comments"
       estimated_effort: medium
       dependencies: [8-1]
       frs: [MFR5, FR28, FR29]
+      tech_spec: "sprint-artifacts/8-2-realtime-comments.md"
+      completed: "2025-12-26"
       
     8-3-in-app-notifications:
-      status: backlog
+      status: done
       title: "In-App Notifications"
       estimated_effort: medium
       dependencies: [8-1]
       frs: [MFR7, FR36, FR37]
+      tech_spec: "sprint-artifacts/8-3-notifications.md"
+      completed: "2025-12-26"
       
   retrospective: optional
 
 # Epic 9: Mobile Management & Invites (Optional/V2)
 # Manager-specific administrative features
 epic-9:
-  status: backlog
+  status: done
   priority: medium
   goal: "Enable manager administration on mobile"
   
   stories:
     9-1-mobile-task-creation:
-      status: backlog
+      status: done
       title: "Mobile Task Creation"
       estimated_effort: medium
       dependencies: [7-2]
+      tech_spec: "sprint-artifacts/9-1-task-creation.md"
+      completed: "2025-12-26"
       
     9-2-mobile-member-management:
-      status: backlog
+      status: done
       title: "Mobile Member Management"
       estimated_effort: medium
       dependencies: [7-1]
       frs: [MFR6, FR30, FR31, FR32]
+      completed: "2025-12-26"
       
   retrospective: optional
 

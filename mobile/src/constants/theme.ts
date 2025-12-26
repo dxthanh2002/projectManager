@@ -51,3 +51,33 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+/**
+ * Task Status Colors - per UX Design Spec
+ * Uses supportive amber for "blocked" (Help Needed) instead of alarming red
+ */
+export const StatusColors = {
+  todo: '#6B7280',        // gray-500
+  in_progress: '#3B82F6', // blue-500  
+  done: '#10B981',        // green-500
+  blocked: '#F59E0B',     // amber-500 (supportive, not alarming)
+} as const;
+
+/**
+ * Task Priority Colors
+ */
+export const PriorityColors = {
+  low: '#6B7280',         // gray-500
+  medium: '#F59E0B',      // amber-500
+  high: '#EF4444',        // red-500
+} as const;
+
+/**
+ * Get status display label
+ */
+export const StatusLabels = {
+  todo: 'To Do',
+  in_progress: 'In Progress',
+  done: 'Done',
+  blocked: 'Help Needed',
+} as const;

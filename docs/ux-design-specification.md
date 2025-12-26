@@ -367,27 +367,27 @@ This is the defining experience that:
 
 Based on this UX specification, the mobile app should implement:
 
-#### Core Screens
-- [ ] **Dashboard** – Team selection with workspace cards
-- [ ] **My Tasks** – Filterable task list for members
-- [ ] **Task Detail** – Bottom sheet with full task info
-- [ ] **Team Members** – Member list with invite/remove
-- [ ] **Notifications** – Real-time alert list
-- [ ] **Login/Signup** – Email/password authentication
+#### Core Screens ✅ COMPLETE
+- [x] **Dashboard** – Team selection with workspace cards
+- [x] **My Tasks** – Filterable task list for members
+- [x] **Task Detail** – Bottom sheet with full task info
+- [x] **Team Members** – Member list with invite/remove
+- [x] **Notifications** – Real-time alert list
+- [x] **Login/Signup** – Email/password authentication
 
-#### Key Interactions
-- [ ] **1-tap Status Change** – Action sheet from task card
-- [ ] **Blocker Comment Modal** – Auto-triggered on "Help Needed"
-- [ ] **Pull-to-refresh** – All list screens
-- [ ] **Bottom Sheet Detail** – Task details overlay
-- [ ] **FAB** – Create task (Manager only)
+#### Key Interactions ✅ COMPLETE
+- [x] **1-tap Status Change** – Action sheet from task card
+- [x] **Blocker Comment Modal** – Auto-triggered on "Help Needed"
+- [x] **Pull-to-refresh** – All list screens
+- [x] **Bottom Sheet Detail** – Task details overlay
+- [x] **FAB** – Create task (Manager only)
 
-#### UX Patterns
-- [ ] **Optimistic UI** – Comments and status changes
-- [ ] **Loading States** – Spinner, button loading, pull-to-refresh
-- [ ] **Empty States** – Celebratory messages with CTAs
-- [ ] **Error Handling** – Friendly toasts by error type
-- [ ] **Smart Escalation** – Time-based blocker notifications
+#### UX Patterns ✅ COMPLETE
+- [x] **Optimistic UI** – Comments and status changes
+- [x] **Loading States** – Spinner, button loading, pull-to-refresh
+- [x] **Empty States** – Celebratory messages with CTAs
+- [x] **Error Handling** – Friendly toasts by error type
+- [ ] **Smart Escalation** – Time-based blocker notifications (V2)
 
 ### Design System Implementation
 
@@ -408,13 +408,70 @@ done:        #10B981 (green-500)
 help_needed: #F59E0B (amber-500)
 ```
 
-### Next Steps
+### Priority Colors
 
-1. **Architecture Review** – Confirm navigation structure with `expo-router`
-2. **Component Development** – Build reusable components per design system
-3. **Screen Implementation** – Implement screens following user flows
-4. **Integration** – Connect to existing Express API + Socket.io
-5. **Testing** – User testing with Member and Manager personas
+```
+low:    #6B7280 (gray-500)
+medium: #F59E0B (amber-500)
+high:   #EF4444 (red-500)
+```
+
+---
+
+## Mobile Navigation Structure
+
+### Tab Bar Architecture
+
+| Tab | Icon | Screen | Primary Action |
+|-----|------|--------|----------------|
+| Dashboard | 📊 | Stats overview | View workload |
+| Tasks | 📋 | Task list + filters | Update status |
+| Team | 👥 | Member list | Invite/remove |
+| Alerts | 🔔 | Notifications | Mark as read |
+
+### Header Behavior
+
+- **Consistent AppHeader:** Team name + hamburger across all tabs
+- **Drawer:** Modal overlay for team switching + logout
+- **Bottom Sheet:** Task details, status changes, comments
+
+---
+
+## Team Management UX
+
+### Member List Patterns
+
+| Pattern | Implementation |
+|---------|----------------|
+| Avatar with initials | `Avatar.Text` from Paper |
+| Role badge | Manager gets `Chip` indicator |
+| Remove with confirmation | `Alert.alert()` before action |
+| Invite by email | Modal with email input |
+
+### Logout Flow
+
+1. User taps hamburger → Drawer opens
+2. Scroll to footer → User info visible
+3. Tap "Đăng xuất" → `reset()` store + `signOut()`
+4. Redirect to login screen
+
+---
+
+## Form Validation UX
+
+### Technology Stack
+
+- **React Hook Form** – Form state management
+- **Zod** – Schema validation
+- **@hookform/resolvers** – Integration layer
+
+### Validation Patterns
+
+| Field | Rule | Error Message |
+|-------|------|---------------|
+| Task Title | min 3 chars | "Tiêu đề phải có ít nhất 3 ký tự" |
+| Blocker Comment | min 10 chars | "X more characters needed" |
+| Email (Invite) | valid email | "Email không hợp lệ" |
 
 ---
 
@@ -422,22 +479,26 @@ help_needed: #F59E0B (amber-500)
 
 | Attribute | Value |
 |---|---|
-| **Version** | 1.0 (MVP Complete) |
+| **Version** | 2.0 (Post-Implementation Update) |
 | **Last Updated** | 2025-12-26 |
 | **Author** | ThanhThanhThanh + Sally (UX Designer) |
-| **Status** | ✅ Ready for Development |
+| **Status** | ✅ Implementation Complete |
+
+### Implementation Progress
+
+| Epic | Stories | UX Status |
+|------|---------|-----------|
+| Epic 6 - Foundation | 3/3 | ✅ Complete |
+| Epic 7 - Dashboard | 2/2 | ✅ Complete |
+| Epic 8 - Execution | 3/3 | ✅ Complete |
+| Epic 9 - Management | 2/2 | ✅ Complete |
 
 ### Steps Completed
-- ✅ Step 1: Initialization
-- ✅ Step 2: Discovery
-- ✅ Step 3: Core Experience
-- ✅ Step 4: Emotional Response
-- ✅ Step 5: UX Inspiration
-- ✅ Step 6: Design System
-- ✅ Step 7: Defining Experience
-- ⏭️ Steps 8-13: Skipped (covered by existing content)
+- ✅ Step 1-7: Core UX Design
 - ✅ Step 14: Finalization
+- ✅ **Post-Implementation Update** (2025-12-26)
 
 ---
 
 **End of UX Design Specification**
+

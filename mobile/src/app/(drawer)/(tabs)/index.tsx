@@ -1,19 +1,28 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, Button, Chip, ActivityIndicator, useTheme } from 'react-native-paper';
+import { Text, Card, Chip, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAppStore } from '@/stores/use-app-store';
 import { useTeam } from '@/hooks/use-teams';
+import { useTaskStats } from '@/hooks/use-tasks';
+import { StatusColors } from '@/constants/theme';
 
 export default function DashboardScreen() {
   const theme = useTheme();
   const { currentTeamId } = useAppStore();
-  const { data: team, isLoading, refetch, isRefetching } = useTeam(currentTeamId);
+  const { data: team, isLoading: teamLoading, refetch: refetchTeam, isRefetching: teamRefetching } = useTeam(currentTeamId);
+  const { stats, isLoading: statsLoading } = useTaskStats(currentTeamId);
   const queryClient = useQueryClient();
 
-  const handleRefresh = () => {
-    refetch();
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchTeam(),
+      queryClient.invalidateQueries({ queryKey: ['tasks', currentTeamId] }),
+    ]);
   };
+
+  const isLoading = teamLoading || statsLoading;
+  const isRefetching = teamRefetching;
 
   // No team selected state
   if (!currentTeamId) {
@@ -66,47 +75,67 @@ export default function DashboardScreen() {
             </Chip>
           )}
         />
-        <Card.Content>
-          <Text variant="bodyMedium">
-            Welcome to your workspace dashboard. Pull down to refresh.
-          </Text>
-        </Card.Content>
       </Card>
 
-      {/* Quick Stats Card - Placeholder */}
+      {/* Quick Stats Card */}
       <Card style={styles.card}>
-        <Card.Title title="Quick Stats" />
+        <Card.Title title="Task Overview" />
         <Card.Content>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text variant="displaySmall" style={{ color: theme.colors.primary }}>
-                0
+                {stats.total}
               </Text>
-              <Text variant="labelSmall">Total Tasks</Text>
+              <Text variant="labelSmall">Total</Text>
             </View>
             <View style={styles.statItem}>
-              <Text variant="displaySmall" style={{ color: theme.colors.tertiary }}>
-                0
+              <Text variant="displaySmall" style={{ color: StatusColors.in_progress }}>
+                {stats.in_progress}
               </Text>
-              <Text variant="labelSmall">In Progress</Text>
+              <Text variant="labelSmall">Active</Text>
             </View>
             <View style={styles.statItem}>
-              <Text variant="displaySmall" style={{ color: '#F59E0B' }}>
-                0
+              <Text variant="displaySmall" style={{ color: StatusColors.blocked }}>
+                {stats.blocked}
               </Text>
               <Text variant="labelSmall">Help Needed</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text variant="displaySmall" style={{ color: StatusColors.done }}>
+                {stats.done}
+              </Text>
+              <Text variant="labelSmall">Done</Text>
             </View>
           </View>
         </Card.Content>
       </Card>
 
-      {/* Recent Activity - Placeholder */}
+      {/* Status Breakdown Card */}
       <Card style={styles.card}>
-        <Card.Title title="Recent Activity" />
+        <Card.Title title="Status Breakdown" />
         <Card.Content>
-          <Text variant="bodyMedium" style={styles.placeholderText}>
-            No recent activity. Tasks and updates will appear here.
-          </Text>
+          <View style={styles.breakdownRow}>
+            <View style={styles.breakdownItem}>
+              <View style={[styles.statusDot, { backgroundColor: StatusColors.todo }]} />
+              <Text variant="bodyMedium">To Do</Text>
+              <Text variant="labelMedium" style={styles.breakdownCount}>{stats.todo}</Text>
+            </View>
+            <View style={styles.breakdownItem}>
+              <View style={[styles.statusDot, { backgroundColor: StatusColors.in_progress }]} />
+              <Text variant="bodyMedium">In Progress</Text>
+              <Text variant="labelMedium" style={styles.breakdownCount}>{stats.in_progress}</Text>
+            </View>
+            <View style={styles.breakdownItem}>
+              <View style={[styles.statusDot, { backgroundColor: StatusColors.blocked }]} />
+              <Text variant="bodyMedium">Help Needed</Text>
+              <Text variant="labelMedium" style={styles.breakdownCount}>{stats.blocked}</Text>
+            </View>
+            <View style={styles.breakdownItem}>
+              <View style={[styles.statusDot, { backgroundColor: StatusColors.done }]} />
+              <Text variant="bodyMedium">Done</Text>
+              <Text variant="labelMedium" style={styles.breakdownCount}>{stats.done}</Text>
+            </View>
+          </View>
         </Card.Content>
       </Card>
     </ScrollView>
@@ -119,7 +148,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    gap: 16,
+    gap: 12,
   },
   loadingContainer: {
     flex: 1,
@@ -145,7 +174,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   card: {
-    marginBottom: 8,
+    marginBottom: 4,
   },
   statsRow: {
     flexDirection: 'row',
@@ -156,8 +185,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  placeholderText: {
-    opacity: 0.6,
-    fontStyle: 'italic',
+  breakdownRow: {
+    gap: 12,
+  },
+  breakdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 4,
+  },
+  statusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  breakdownCount: {
+    marginLeft: 'auto',
+    opacity: 0.7,
   },
 });
