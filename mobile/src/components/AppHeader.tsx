@@ -57,7 +57,7 @@ export function AppHeader({ title, showMenu = true }: AppHeaderProps) {
 
     return (
         <>
-            <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
+            <View style={[styles.header, { backgroundColor: '#3F0E40' }]}>
                 {/* Left: Menu + Team Icon + Team Name */}
                 <Pressable
                     onPress={handleMenuPress}

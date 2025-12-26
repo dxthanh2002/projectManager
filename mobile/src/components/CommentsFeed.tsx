@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useComments } from '../hooks/use-comments';
 import { CommentItem } from './CommentItem';
@@ -46,14 +46,13 @@ export function CommentsFeed({ taskId }: CommentsFeedProps) {
         );
     }
 
+    // Use View with map instead of FlatList to avoid nesting VirtualizedList
     return (
-        <FlatList
-            data={comments}
-            renderItem={({ item }) => <CommentItem comment={item} />}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-        />
+        <View style={styles.listContent}>
+            {comments.map((comment) => (
+                <CommentItem key={comment.id} comment={comment} />
+            ))}
+        </View>
     );
 }
 

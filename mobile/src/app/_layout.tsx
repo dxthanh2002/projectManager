@@ -84,7 +84,7 @@ export default function RootLayout() {
         <PaperProvider theme={paperTheme}>
           <ThemeProvider value={navTheme}>
             {renderContent()}
-            <StatusBar style="auto" />
+            <StatusBar style="light" />
             <Toast />
           </ThemeProvider>
         </PaperProvider>
