@@ -213,6 +213,23 @@ Notifications are the glue of the async workflow.
     *   **Toast:** Ephemeral popup (5s) for immediate awareness while online.
     *   **Badge:** Red dot on "Notifications" bell icon in navbar.
     *   **List:** Clicking bell shows history (unread top). Clicking an item navigates to the specific task.
+*   **Settings:** Users can configure which events trigger notifications and potentially "mute" specific teams.
+
+## State Management & Error Handling
+
+### Conflict Resolution
+*   **Optimistic Updates:** The UI (Web/Mobile) will perform optimistic updates for state changes (e.g., status changes).
+*   **Server as Source of Truth:** If an update fails on the server (e.g., due to a version mismatch or permission change), the UI must revert to the server state and show an error toast.
+*   **Last-Write-Wins:** For simple text updates (Title/Description), the last write to the server wins.
+
+### Network Resiliency
+*   **Offline Awareness:** App shows a "Working Offline" banner if WebSocket/Internet connection is lost.
+*   **Retry Logic:** Failed API calls (POST/PATCH) should be retried automatically (matching TanStack Query defaults).
+*   **Blocking Navigation:** Ensure a task update is finalized before allowing navigation away from the edit screen if changes are un-synced.
+
+### Error States
+*   **Auth Failure:** If a session expires (401), the app clears local storage and redirects to the Login screen immediately.
+*   **Data Integrity:** If a task is deleted while a member is viewing it, the member receives a "Task no longer exists" alert and is redirected to the dashboard.
 
 ## Web App Specific Requirements
 
@@ -322,13 +339,38 @@ ManagerCheck is a **Single Page Application (SPA)** built with Vue 3, communicat
 - **FR18a:** User who creates a team automatically becomes the Manager of that team.
 - **FR19:** Managers can add a new team member to their team by email or username.
 - **FR20:** Managers can view a list of all members in their team(s).
-- **FR21:** Managers can remove a team member from their team(s).
+- **FR21:** Managers can remove a team member from their team(s) (Soft Delete: Member is marked as inactive in team, but history is preserved).
+- **FR21a:** Managers can delete a task (Soft Delete: Task is hidden from normal views but persists in database for audit/recovery).
 
 ### 5. Real-Time Notifications
 - **FR22:** Members receive real-time notification when a new task is assigned to them.
 - **FR23:** Managers receive real-time notification when a task status changes to Blocked.
 - **FR24:** Managers receive real-time notification when a task status changes to Done.
 - **FR25:** Users receive real-time notification when a comment is added to a task they are involved with.
+
+### 6. User Experience & Interface (Added 2025-12-26)
+
+#### Filtering & Search
+- **FR26:** Users can filter tasks by priority level (Low, Medium, High) in addition to status.
+- **FR27:** Multiple filters can be combined (e.g., Status: Blocked + Priority: High).
+
+#### Optimistic UI
+- **FR28:** Comment add/edit/delete actions reflect immediately in UI before server confirmation.
+- **FR29:** On server error, UI rolls back to previous state with error toast notification.
+
+#### Empty States
+- **FR30:** Dashboard shows welcoming empty state with "Create Team" CTA when user has no teams.
+- **FR31:** Task list shows encouraging empty state with "Create Task" CTA when team has no tasks.
+- **FR32:** Member list shows helpful empty state with "Invite Member" CTA when team has no members.
+
+#### Loading States
+- **FR33:** All data-fetching operations display a loading indicator (spinner or skeleton).
+- **FR34:** Buttons are disabled with loading spinner during async operations.
+- **FR35:** Pull-to-refresh available on mobile and swipe-to-refresh gesture on web (future).
+
+#### Error Handling
+- **FR36:** User-friendly toast notifications for all error types (network, validation, permission).
+- **FR37:** Specific error messages for common failures (e.g., "User not found", "Already a member").
 
 ## Non-Functional Requirements
 
@@ -454,8 +496,8 @@ ManagerCheck is a **Single Page Application (SPA)** built with Vue 3, communicat
 
 #### MFR6: Team Management
 - **MFR6.1:** Managers can view team members list
-- **MFR6.2:** Managers can invite members by email
-- **MFR6.3:** Managers can remove members (swipe or long press)
+- **MFR6.2:** Managers can invite members by email or username (matching Web functionality).
+- **MFR6.3:** Managers can remove members (Soft Delete)
 - **MFR6.4:** Team switcher available in drawer navigation
 
 #### MFR7: Notifications
@@ -467,9 +509,9 @@ ManagerCheck is a **Single Page Application (SPA)** built with Vue 3, communicat
 ### Mobile Non-Functional Requirements
 
 #### Performance
-- **MNFR1:** App cold start < 3 seconds
+- **MNFR1:** App cold start < 3 seconds (Optimized via Hermes engine and partial JS bundle loading)
 - **MNFR2:** Screen transitions < 300ms
-- **MNFR3:** List scrolling at 60fps
+- **MNFR3:** List scrolling at 60fps (Constant frame rate using FlashList or FlatList optimization)
 - **MNFR4:** WebSocket reconnection < 2 seconds after network restore
 
 #### Compatibility

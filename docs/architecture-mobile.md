@@ -458,6 +458,151 @@ Web app uses Socket.io for real-time updates. Mobile needs consistency.
 #### Decision
 Use **socket.io-client** with `transports: ['websocket']` and authentication via session cookies.
 
+---
+
+### Decision 9: Optimistic UI Pattern (Added 2025-12-26)
+
+**Status:** Approved  
+**Date:** 2025-12-26
+
+#### Context
+Per PRD FR28-FR29 and UX Design Spec, the app must provide instant feedback for user actions (comments, status changes) with rollback on error.
+
+#### Decision
+Implement optimistic updates using TanStack Query's `useMutation` with `onMutate` / `onError` callbacks.
+
+#### Implementation Pattern
+
+```typescript
+// hooks/use-add-comment.ts
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+export function useAddComment(taskId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (comment: string) => api.addComment(taskId, comment),
+    
+    // Optimistic update
+    onMutate: async (newComment) => {
+      await queryClient.cancelQueries({ queryKey: ['comments', taskId] });
+      
+      const previousComments = queryClient.getQueryData(['comments', taskId]);
+      
+      // Add optimistic comment with tempId
+      queryClient.setQueryData(['comments', taskId], (old: Comment[]) => [
+        ...old,
+        { id: `temp-${Date.now()}`, content: newComment, createdAt: new Date() }
+      ]);
+      
+      return { previousComments };
+    },
+    
+    // Rollback on error
+    onError: (err, _, context) => {
+      queryClient.setQueryData(['comments', taskId], context?.previousComments);
+      Toast.show({ type: 'error', text1: 'Failed to add comment' });
+    },
+    
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', taskId] });
+    },
+  });
+}
+```
+
+#### Key Patterns
+- Use `tempId` prefix for optimistic items
+- Store previous state in `onMutate` context
+- Rollback and show toast on error
+- Invalidate queries on settle
+
+---
+
+### Decision 10: Bottom Sheet for Task Details (Added 2025-12-26)
+
+**Status:** Approved  
+**Date:** 2025-12-26
+
+#### Context
+Per UX Design Spec, task details should appear as a bottom sheet overlay (swipe up to expand, non-blocking).
+
+#### Decision
+Use **@gorhom/bottom-sheet** for native-feeling bottom sheet with gesture support.
+
+#### Implementation
+
+```bash
+# Install package
+bun add @gorhom/bottom-sheet
+```
+
+```typescript
+// components/task-detail-sheet.tsx
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { useCallback, useRef } from 'react';
+
+export function TaskDetailSheet({ task, onClose }: TaskDetailSheetProps) {
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const snapPoints = ['50%', '90%'];
+
+  return (
+    <BottomSheet
+      ref={bottomSheetRef}
+      index={0}
+      snapPoints={snapPoints}
+      onClose={onClose}
+      enablePanDownToClose
+    >
+      <BottomSheetView style={styles.contentContainer}>
+        <TaskDetailContent task={task} />
+      </BottomSheetView>
+    </BottomSheet>
+  );
+}
+```
+
+#### Integration Notes
+- Requires `react-native-reanimated` (already in stack)
+- Requires `react-native-gesture-handler` (already in stack)
+- Add `<GestureHandlerRootView>` in root layout if not present
+
+---
+
+### Decision 11: Status Colors Theme (Added 2025-12-26)
+
+**Status:** Approved  
+**Date:** 2025-12-26
+
+#### Context
+Per UX Design Spec, status pills need consistent colors across the app.
+
+#### Decision
+Define status colors in theme constants for consistent usage.
+
+#### Implementation
+
+```typescript
+// constants/theme.ts
+export const StatusColors = {
+  todo: '#6B7280',        // gray-500
+  in_progress: '#3B82F6', // blue-500
+  done: '#10B981',        // green-500
+  help_needed: '#F59E0B', // amber-500 (supportive, not alarming)
+} as const;
+
+export const PriorityColors = {
+  low: '#6B7280',         // gray-500
+  medium: '#F59E0B',      // amber-500
+  high: '#EF4444',        // red-500
+} as const;
+
+// Usage with react-native-paper Chip
+export const getStatusChipStyle = (status: TaskStatus) => ({
+  backgroundColor: StatusColors[status],
+  color: status === 'todo' ? '#FFFFFF' : '#FFFFFF',
+});
+```
 
 ---
 
@@ -547,5 +692,5 @@ The mobile app connects to the same backend as the web frontend:
 
 ---
 
-**Last Updated:** 2025-12-25  
-**Version:** 3.0.0 (Complete Rewrite for Expo 54)
+**Last Updated:** 2025-12-26  
+**Version:** 3.1.0 (Added UX Pattern Decisions)
