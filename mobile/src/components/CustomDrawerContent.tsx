@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import {
     Text,
     Avatar,
@@ -8,14 +8,19 @@ import {
     Button,
     useTheme,
     IconButton,
-    List
+    List,
+    Modal,
+    Portal,
+    TextInput
 } from 'react-native-paper';
 import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
 import { useRouter } from 'expo-router';
 import { useTeams } from '../hooks/use-teams';
 import { useAppStore } from '../stores/use-app-store';
 import { useSession, signOut } from '../lib/auth-client';
+import { useInviteMember } from '../hooks/use-member-actions';
 import { Team } from '../types/api';
+import Toast from 'react-native-toast-message';
 
 export function CustomDrawerContent(props: DrawerContentComponentProps) {
     const theme = useTheme();
@@ -25,9 +30,62 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     const { currentTeamId, setCurrentTeamId, reset } = useAppStore();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+    // Workspace action menu state
+    const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+    const [actionMenuVisible, setActionMenuVisible] = useState(false);
+    const [inviteModalVisible, setInviteModalVisible] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState('');
+
+    const inviteMutation = useInviteMember(selectedTeam?.id || '');
+
     const handleTeamPress = (team: Team) => {
         setCurrentTeamId(team.id);
         props.navigation.closeDrawer();
+    };
+
+    const handleMorePress = (team: Team) => {
+        setSelectedTeam(team);
+        setActionMenuVisible(true);
+    };
+
+    const handleInviteMember = () => {
+        setActionMenuVisible(false);
+        setInviteModalVisible(true);
+    };
+
+    const handleLeaveTeam = () => {
+        setActionMenuVisible(false);
+        Alert.alert(
+            'Leave Workspace',
+            `Are you sure you want to leave "${selectedTeam?.name}"?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Leave',
+                    style: 'destructive',
+                    onPress: () => {
+                        // TODO: Implement leave team API
+                        Toast.show({
+                            type: 'info',
+                            text1: 'Coming soon',
+                            text2: 'Leave workspace feature will be available soon'
+                        });
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleSendInvite = async () => {
+        if (!inviteEmail.trim()) return;
+
+        try {
+            await inviteMutation.mutateAsync({ email: inviteEmail.trim() });
+            setInviteModalVisible(false);
+            setInviteEmail('');
+        } catch (error) {
+            // Error handled by mutation
+        }
     };
 
     const handleCreateTeam = () => {
@@ -46,7 +104,6 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         }
     };
 
-    // Get user initials for avatar
     const getUserInitials = () => {
         const name = session?.user?.name || session?.user?.email || 'U';
         return name.charAt(0).toUpperCase();
@@ -55,17 +112,17 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     const getTeamInitials = (team: Team) => {
         const words = team.name.split(' ');
         if (words.length >= 2) {
-            return (words[0][0] + words[1][0]).toUpperCase();
+            return (words[0][0] + words[1][0]).toLowerCase();
         }
         return team.name.substring(0, 2).toLowerCase();
     };
 
-    const renderTeamItem = ({ item: team }: { item: Team }) => {
+    const renderTeamItem = (team: Team) => {
         const isSelected = team.id === currentTeamId;
-        const isManager = team.createdById === session?.user?.id;
 
         return (
             <Pressable
+                key={team.id}
                 onPress={() => handleTeamPress(team)}
                 style={({ pressed }) => [
                     styles.teamItem,
@@ -101,7 +158,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                 <IconButton
                     icon="dots-vertical"
                     size={20}
-                    onPress={() => { }}
+                    onPress={() => handleMorePress(team)}
                     style={styles.moreButton}
                 />
             </Pressable>
@@ -109,108 +166,191 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     };
 
     return (
-        <DrawerContentScrollView {...props} contentContainerStyle={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <Text variant="titleLarge" style={styles.headerTitle}>
-                    Workspaces
-                </Text>
-                <Text
-                    variant="labelLarge"
-                    style={[styles.editButton, { color: theme.colors.primary }]}
-                >
-                    Edit
-                </Text>
-            </View>
-
-            {/* Team List */}
-            {isLoading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator animating size="small" />
-                    <Text variant="bodySmall" style={styles.loadingText}>
-                        Loading teams...
+        <>
+            <DrawerContentScrollView {...props} contentContainerStyle={styles.container}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <Text variant="titleLarge" style={styles.headerTitle}>
+                        Workspaces
+                    </Text>
+                    <Text
+                        variant="labelLarge"
+                        style={[styles.editButton, { color: theme.colors.primary }]}
+                    >
+                        Edit
                     </Text>
                 </View>
-            ) : error ? (
-                <View style={styles.errorContainer}>
-                    <Text variant="bodyMedium" style={{ color: theme.colors.error }}>
-                        Failed to load teams
-                    </Text>
-                    <Button mode="text" onPress={() => refetch()}>
-                        Retry
-                    </Button>
-                </View>
-            ) : teams && teams.length > 0 ? (
-                <FlatList
-                    data={teams}
-                    renderItem={renderTeamItem}
-                    keyExtractor={(item) => item.id}
-                    scrollEnabled={false}
-                />
-            ) : (
-                <View style={styles.emptyContainer}>
-                    <Text variant="bodyMedium" style={styles.emptyText}>
-                        No workspaces yet
-                    </Text>
-                </View>
-            )}
 
-            {/* Footer Actions */}
-            <View style={styles.footer}>
-                <Divider style={styles.divider} />
-
-                <List.Item
-                    title="Add a workspace"
-                    left={() => <List.Icon icon="plus" />}
-                    onPress={handleCreateTeam}
-                    style={styles.footerItem}
-                />
-                <List.Item
-                    title="Preferences"
-                    left={() => <List.Icon icon="cog-outline" />}
-                    onPress={() => { }}
-                    style={styles.footerItem}
-                />
-                <List.Item
-                    title="Help"
-                    left={() => <List.Icon icon="help-circle-outline" />}
-                    onPress={() => { }}
-                    style={styles.footerItem}
-                />
-
-                <Divider style={styles.divider} />
-
-                {/* User Info */}
-                <View style={styles.userInfo}>
-                    <Avatar.Text
-                        size={40}
-                        label={getUserInitials()}
-                        style={{ backgroundColor: theme.colors.primary }}
-                    />
-                    <View style={styles.userDetails}>
-                        <Text variant="titleSmall" numberOfLines={1}>
-                            {session?.user?.name || 'User'}
-                        </Text>
-                        <Text variant="bodySmall" style={styles.email} numberOfLines={1}>
-                            {session?.user?.email}
+                {/* Team List */}
+                {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator animating size="small" />
+                        <Text variant="bodySmall" style={styles.loadingText}>
+                            Loading teams...
                         </Text>
                     </View>
-                </View>
+                ) : error ? (
+                    <View style={styles.errorContainer}>
+                        <Text variant="bodyMedium" style={{ color: theme.colors.error }}>
+                            Failed to load teams
+                        </Text>
+                        <Button mode="text" onPress={() => refetch()}>
+                            Retry
+                        </Button>
+                    </View>
+                ) : teams && teams.length > 0 ? (
+                    <View>
+                        {teams.map(renderTeamItem)}
+                    </View>
+                ) : (
+                    <View style={styles.emptyContainer}>
+                        <Text variant="bodyMedium" style={styles.emptyText}>
+                            No workspaces yet
+                        </Text>
+                    </View>
+                )}
 
-                {/* Logout Button */}
-                <Button
-                    mode="outlined"
-                    onPress={handleLogout}
-                    loading={isLoggingOut}
-                    disabled={isLoggingOut}
-                    icon="logout"
-                    style={styles.logoutButton}
-                    textColor={theme.colors.error}
+                {/* Footer Actions */}
+                <View style={styles.footer}>
+                    <Divider style={styles.divider} />
+
+                    <List.Item
+                        title="Add a workspace"
+                        left={() => <List.Icon icon="plus" />}
+                        onPress={handleCreateTeam}
+                        style={styles.footerItem}
+                    />
+                    <List.Item
+                        title="Preferences"
+                        left={() => <List.Icon icon="cog-outline" />}
+                        onPress={() => { }}
+                        style={styles.footerItem}
+                    />
+                    <List.Item
+                        title="Help"
+                        left={() => <List.Icon icon="help-circle-outline" />}
+                        onPress={() => { }}
+                        style={styles.footerItem}
+                    />
+
+                    <Divider style={styles.divider} />
+
+                    {/* User Info */}
+                    <View style={styles.userInfo}>
+                        <Avatar.Text
+                            size={40}
+                            label={getUserInitials()}
+                            style={{ backgroundColor: theme.colors.primary }}
+                        />
+                        <View style={styles.userDetails}>
+                            <Text variant="titleSmall" numberOfLines={1}>
+                                {session?.user?.name || 'User'}
+                            </Text>
+                            <Text variant="bodySmall" style={styles.email} numberOfLines={1}>
+                                {session?.user?.email}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Logout Button */}
+                    <Button
+                        mode="outlined"
+                        onPress={handleLogout}
+                        loading={isLoggingOut}
+                        disabled={isLoggingOut}
+                        icon="logout"
+                        style={styles.logoutButton}
+                        textColor={theme.colors.error}
+                    >
+                        Đăng xuất
+                    </Button>
+                </View>
+            </DrawerContentScrollView>
+
+            {/* Workspace Action Menu */}
+            <Portal>
+                <Modal
+                    visible={actionMenuVisible}
+                    onDismiss={() => setActionMenuVisible(false)}
+                    contentContainerStyle={[
+                        styles.actionMenuContainer,
+                        { backgroundColor: theme.colors.surface }
+                    ]}
                 >
-                    Đăng xuất
-                </Button>
-            </View>
-        </DrawerContentScrollView>
+                    {/* Selected Team Header */}
+                    <View style={styles.actionMenuHeader}>
+                        <View style={styles.teamAvatar}>
+                            <Text style={styles.teamInitials}>
+                                {selectedTeam ? getTeamInitials(selectedTeam) : ''}
+                            </Text>
+                        </View>
+                        <Text variant="titleMedium" style={styles.actionMenuTitle}>
+                            {selectedTeam?.name}
+                        </Text>
+                    </View>
+
+                    <Divider style={styles.divider} />
+
+                    {/* Invite Members */}
+                    <List.Item
+                        title="Invite members"
+                        left={() => <List.Icon icon="account-plus-outline" />}
+                        onPress={handleInviteMember}
+                        style={styles.actionMenuItem}
+                    />
+
+                    {/* Sign Out (Leave) */}
+                    <List.Item
+                        title="Sign out"
+                        titleStyle={{ color: theme.colors.error }}
+                        left={() => <List.Icon icon="logout" color={theme.colors.error} />}
+                        onPress={handleLeaveTeam}
+                        style={styles.actionMenuItem}
+                    />
+                </Modal>
+
+                {/* Invite Modal */}
+                <Modal
+                    visible={inviteModalVisible}
+                    onDismiss={() => setInviteModalVisible(false)}
+                    contentContainerStyle={[
+                        styles.inviteModalContainer,
+                        { backgroundColor: theme.colors.surface }
+                    ]}
+                >
+                    <Text variant="headlineSmall" style={styles.modalTitle}>
+                        Add by Email
+                    </Text>
+
+                    <TextInput
+                        label="Email"
+                        value={inviteEmail}
+                        onChangeText={setInviteEmail}
+                        mode="outlined"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        style={styles.emailInput}
+                    />
+
+                    <View style={styles.modalButtons}>
+                        <Button
+                            mode="text"
+                            onPress={() => setInviteModalVisible(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            mode="contained"
+                            onPress={handleSendInvite}
+                            loading={inviteMutation.isPending}
+                            disabled={!inviteEmail.trim() || inviteMutation.isPending}
+                        >
+                            Send Invite
+                        </Button>
+                    </View>
+                </Modal>
+            </Portal>
+        </>
     );
 }
 
@@ -311,5 +451,43 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         marginBottom: 16,
         borderColor: '#EF4444',
+    },
+    // Action Menu Styles
+    actionMenuContainer: {
+        margin: 20,
+        marginTop: 'auto',
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        paddingBottom: 20,
+    },
+    actionMenuHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        gap: 12,
+    },
+    actionMenuTitle: {
+        fontWeight: '600',
+    },
+    actionMenuItem: {
+        paddingHorizontal: 8,
+    },
+    // Invite Modal Styles
+    inviteModalContainer: {
+        margin: 20,
+        borderRadius: 16,
+        padding: 20,
+    },
+    modalTitle: {
+        fontWeight: '600',
+        marginBottom: 16,
+    },
+    emailInput: {
+        marginBottom: 16,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: 8,
     },
 });

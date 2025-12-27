@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Card, Text, Chip, useTheme } from 'react-native-paper';
 import { Task } from '../types/api';
 import { StatusColors, StatusLabels, PriorityColors } from '../constants/theme';
@@ -9,11 +9,30 @@ interface TaskCardProps {
     onPress?: (task: Task) => void;
 }
 
+// Helper to create color with alpha
+const withAlpha = (hexColor: string, alpha: number): string => {
+    if (hexColor.startsWith('#')) {
+        const r = parseInt(hexColor.slice(1, 3), 16);
+        const g = parseInt(hexColor.slice(3, 5), 16);
+        const b = parseInt(hexColor.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    return hexColor;
+};
+
+// Priority labels in English
+const PriorityLabels = {
+    low: 'Low',
+    medium: 'Medium',
+    high: 'High',
+} as const;
+
 export function TaskCard({ task, onPress }: TaskCardProps) {
     const theme = useTheme();
     const statusColor = StatusColors[task.status];
     const priorityColor = PriorityColors[task.priority];
     const statusLabel = StatusLabels[task.status];
+    const priorityLabel = PriorityLabels[task.priority];
 
     // Format due date
     const formatDueDate = (dateStr: string | null) => {
@@ -49,14 +68,14 @@ export function TaskCard({ task, onPress }: TaskCardProps) {
                     >
                         {task.title}
                     </Text>
-                    <Chip
-                        compact
-                        mode="flat"
-                        style={[styles.priorityChip, { backgroundColor: `${priorityColor}20` }]}
-                        textStyle={{ color: priorityColor, fontSize: 10 }}
-                    >
-                        {task.priority.toUpperCase()}
-                    </Chip>
+                    <View style={[
+                        styles.priorityBadge,
+                        { backgroundColor: withAlpha(priorityColor, 0.15) }
+                    ]}>
+                        <Text style={[styles.priorityText, { color: priorityColor }]}>
+                            {priorityLabel}
+                        </Text>
+                    </View>
                 </View>
 
                 {/* Description (if exists) */}
@@ -72,14 +91,9 @@ export function TaskCard({ task, onPress }: TaskCardProps) {
 
                 {/* Footer Row: Status + Due Date */}
                 <View style={styles.footerRow}>
-                    <Chip
-                        compact
-                        mode="flat"
-                        style={[styles.statusChip, { backgroundColor: statusColor }]}
-                        textStyle={styles.statusText}
-                    >
-                        {statusLabel}
-                    </Chip>
+                    <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+                        <Text style={styles.statusText}>{statusLabel}</Text>
+                    </View>
 
                     {dueDateText && (
                         <Text
@@ -103,24 +117,29 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     content: {
-        gap: 8,
+        gap: 10,
     },
     headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        gap: 8,
+        gap: 12,
     },
     title: {
         flex: 1,
         fontWeight: '600',
     },
-    priorityChip: {
-        height: 24,
+    priorityBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    priorityText: {
+        fontSize: 11,
+        fontWeight: '600',
     },
     description: {
         opacity: 0.7,
-        marginTop: 4,
     },
     footerRow: {
         flexDirection: 'row',
@@ -128,12 +147,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 4,
     },
-    statusChip: {
-        height: 26,
+    statusBadge: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
     },
     statusText: {
         color: '#FFFFFF',
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: '600',
     },
     dueDate: {
