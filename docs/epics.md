@@ -269,6 +269,13 @@ This document provides the complete epic and story breakdown for **managercheck*
     *   Invite by email/username functionality.
     *   Swipe-to-remove member (Soft Delete) with confirmation.
 
+### Story 9.3: Mobile Leave Workspace
+*   **User Story:** As a Member, I want to leave a workspace, So that I can remove myself from teams I no longer contribute to.
+*   **Acceptance Criteria:**
+    *   One-tap "Sign Out" from Workspace Menu triggers confirmation.
+    *   Backend API `POST /api/teams/:teamId/leave` handles self-removal.
+    *   User is redirected to another available team or the "No Teams" empty state upon success.
+
 ---
 
 ## FR Coverage Matrix (Updated)

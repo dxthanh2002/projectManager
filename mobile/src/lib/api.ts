@@ -61,6 +61,10 @@ export const api = {
             method: 'PATCH',
             body: JSON.stringify({ status }),
         }),
+        update: (taskId: string, data: Partial<CreateTaskDto>) => apiFetch<Task>(`/api/tasks/${taskId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(data),
+        }),
         addComment: (taskId: string, content: string) => apiFetch<any>(`/api/tasks/${taskId}/comments`, {
             method: 'POST',
             body: JSON.stringify({ content }),

@@ -1,7 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import {
     Modal,
@@ -19,17 +18,11 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCreateTask, CreateTaskInput } from '../hooks/use-create-task';
+import { useUpdateTask } from '../hooks/use-update-task-details';
 import { useTeamMembers } from '../hooks/use-team-members';
-import { TaskPriority } from '../types/api';
+import { TaskPriority, Task } from '../types/api';
 
-interface CreateTaskModalProps {
-    visible: boolean;
-    teamId: string;
-    onClose: () => void;
-}
-
-// Validation schema
+// Validation schema (same as create)
 const taskSchema = z.object({
     title: z.string().min(3, 'Tiêu đề phải có ít nhất 3 ký tự'),
     description: z.string().optional(),
@@ -40,9 +33,16 @@ const taskSchema = z.object({
 
 type TaskFormData = z.infer<typeof taskSchema>;
 
-export function CreateTaskModal({ visible, teamId, onClose }: CreateTaskModalProps) {
+interface EditTaskModalProps {
+    visible: boolean;
+    task: Task;
+    teamId: string;
+    onClose: () => void;
+}
+
+export function EditTaskModal({ visible, task, teamId, onClose }: EditTaskModalProps) {
     const theme = useTheme();
-    const createTaskMutation = useCreateTask();
+    const updateTaskMutation = useUpdateTask();
     const { data: members, isLoading: membersLoading } = useTeamMembers(teamId);
     const [showAssigneeList, setShowAssigneeList] = useState(false);
 
@@ -52,13 +52,26 @@ export function CreateTaskModal({ visible, teamId, onClose }: CreateTaskModalPro
     const { control, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<TaskFormData>({
         resolver: zodResolver(taskSchema),
         defaultValues: {
-            title: '',
-            description: '',
-            priority: 'medium',
-            assigneeId: undefined,
-            dueDate: undefined,
+            title: task.title,
+            description: task.description || '',
+            priority: task.priority,
+            assigneeId: task.assigneeId || undefined,
+            dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
         },
     });
+
+    // Reset form when task changes
+    useEffect(() => {
+        if (visible && task) {
+            reset({
+                title: task.title,
+                description: task.description || '',
+                priority: task.priority,
+                assigneeId: task.assigneeId || undefined,
+                dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+            });
+        }
+    }, [visible, task, reset]);
 
     const selectedAssigneeId = watch('assigneeId');
     const selectedAssignee = members?.find(m => m.id === selectedAssigneeId);
@@ -66,7 +79,8 @@ export function CreateTaskModal({ visible, teamId, onClose }: CreateTaskModalPro
 
     const onSubmit = async (data: TaskFormData) => {
         try {
-            await createTaskMutation.mutateAsync({
+            await updateTaskMutation.mutateAsync({
+                taskId: task.id,
                 teamId,
                 data: {
                     title: data.title,
@@ -76,7 +90,6 @@ export function CreateTaskModal({ visible, teamId, onClose }: CreateTaskModalPro
                     dueDate: data.dueDate ? data.dueDate.toISOString() : undefined,
                 },
             });
-            reset();
             onClose();
         } catch (error) {
             // Error handled by mutation
@@ -84,7 +97,6 @@ export function CreateTaskModal({ visible, teamId, onClose }: CreateTaskModalPro
     };
 
     const handleClose = () => {
-        reset();
         setShowAssigneeList(false);
         setShowDatePicker(false);
         onClose();
@@ -106,7 +118,7 @@ export function CreateTaskModal({ visible, teamId, onClose }: CreateTaskModalPro
                     <ScrollView showsVerticalScrollIndicator={false}>
                         {/* Header */}
                         <Text variant="headlineSmall" style={styles.title}>
-                            ➕ Tạo Task Mới
+                            ✏️ Chỉnh Sửa Task
                         </Text>
 
                         {/* Title Input */}
@@ -140,7 +152,7 @@ export function CreateTaskModal({ visible, teamId, onClose }: CreateTaskModalPro
                                     mode="outlined"
                                     label="Mô tả"
                                     placeholder="Mô tả chi tiết..."
-                                    value={value}
+                                    value={value || ''}
                                     onChangeText={onChange}
                                     multiline
                                     numberOfLines={3}
@@ -268,17 +280,17 @@ export function CreateTaskModal({ visible, teamId, onClose }: CreateTaskModalPro
                             <Button
                                 mode="text"
                                 onPress={handleClose}
-                                disabled={createTaskMutation.isPending}
+                                disabled={updateTaskMutation.isPending}
                             >
                                 Hủy
                             </Button>
                             <Button
                                 mode="contained"
                                 onPress={handleSubmit(onSubmit)}
-                                loading={createTaskMutation.isPending}
-                                disabled={createTaskMutation.isPending}
+                                loading={updateTaskMutation.isPending}
+                                disabled={updateTaskMutation.isPending}
                             >
-                                Tạo Task
+                                Lưu Thay Đổi
                             </Button>
                         </View>
                     </ScrollView>
@@ -330,13 +342,6 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
         gap: 8,
         marginTop: 16,
-    },
-    row: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-    },
-    flex1: {
-        flex: 1,
     },
     dateButton: {
         marginBottom: 8,

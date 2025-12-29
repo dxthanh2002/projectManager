@@ -50,9 +50,11 @@ export function MemberItem({ member, isManager, onRemove, currentUserId }: Membe
                         {isCurrentUser && ' (Bạn)'}
                     </Text>
                     {member.role === 'manager' && (
-                        <Chip compact mode="flat" style={styles.roleChip}>
-                            Manager
-                        </Chip>
+                        <View style={[styles.roleChip, { backgroundColor: theme.colors.primaryContainer }]}>
+                            <Text style={{ color: theme.colors.onPrimaryContainer, fontSize: 11, fontWeight: '600' }}>
+                                Manager
+                            </Text>
+                        </View>
                     )}
                 </View>
                 <Text variant="bodySmall" style={styles.email} numberOfLines={1}>
@@ -97,7 +99,9 @@ const styles = StyleSheet.create({
         flexShrink: 1,
     },
     roleChip: {
-        height: 22,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 12,
     },
     email: {
         opacity: 0.6,

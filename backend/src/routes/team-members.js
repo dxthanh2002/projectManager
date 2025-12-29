@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../lib/db.js';
-import { userTeam } from '../schema/index.ts';
+import { userTeam, team } from '../schema/index.ts';
 import { user } from '../schema/auth.ts';
 import { eq, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
@@ -236,6 +236,70 @@ router.patch('/teams/:teamId/members/:userId/role', requireAuth, requireTeamMemb
     } catch (error) {
         console.error('Error updating member role:', error);
         res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to update member role' });
+    }
+});
+
+
+/**
+ * POST /api/teams/:teamId/leave
+ * Allow a member to leave the team
+ * - Cannot leave if you're the last manager
+ */
+router.post('/teams/:teamId/leave', requireAuth, requireTeamMembership, async (req, res) => {
+    try {
+        const { teamId } = req.params;
+        const userId = req.user.id;
+
+        // 1. Check current role
+        const member = await db
+            .select()
+            .from(userTeam)
+            .where(and(
+                eq(userTeam.teamId, teamId),
+                eq(userTeam.userId, userId)
+            ))
+            .limit(1);
+
+        if (!member[0]) {
+            return res.status(404).json({
+                error: 'NOT_FOUND',
+                message: 'You are not a member of this team'
+            });
+        }
+
+        // 2. Prevent "orphan" teams (but allow deleting if last manager)
+        let message = 'Successfully left the team';
+
+        if (member[0].role === 'manager') {
+            const managerCount = await db
+                .select()
+                .from(userTeam)
+                .where(and(
+                    eq(userTeam.teamId, teamId),
+                    eq(userTeam.role, 'manager')
+                ));
+
+            if (managerCount.length === 1) {
+                // Last manager leaving -> Delete the Team
+                await db.delete(team).where(eq(team.id, teamId));
+                // Note: user_team and tasks will cascade delete based on schema
+                return res.json({
+                    message: 'Team deleted because you were the last manager',
+                    action: 'deleted'
+                });
+            }
+        }
+
+        // 3. Remove self (if not deleting team)
+        await db.delete(userTeam).where(and(
+            eq(userTeam.teamId, teamId),
+            eq(userTeam.userId, userId)
+        ));
+
+        res.json({ message });
+    } catch (error) {
+        console.error('Error leaving team:', error);
+        res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to leave team' });
     }
 });
 

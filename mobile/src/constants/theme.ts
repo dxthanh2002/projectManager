@@ -60,7 +60,7 @@ export const StatusColors = {
   todo: '#6B7280',        // gray-500
   in_progress: '#3B82F6', // blue-500  
   done: '#10B981',        // green-500
-  blocked: '#F59E0B',     // amber-500 (supportive, not alarming)
+  blocked: '#EF4444',     // red-500 (alarming)
 } as const;
 
 /**
@@ -79,5 +79,5 @@ export const StatusLabels = {
   todo: 'To Do',
   in_progress: 'In Progress',
   done: 'Done',
-  blocked: 'Help Needed',
+  blocked: 'Blocked',
 } as const;

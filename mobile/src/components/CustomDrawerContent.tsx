@@ -18,7 +18,7 @@ import { useRouter } from 'expo-router';
 import { useTeams } from '../hooks/use-teams';
 import { useAppStore } from '../stores/use-app-store';
 import { useSession, signOut } from '../lib/auth-client';
-import { useInviteMember } from '../hooks/use-member-actions';
+import { useInviteMember, useLeaveTeam } from '../hooks/use-member-actions';
 import { Team } from '../types/api';
 import Toast from 'react-native-toast-message';
 
@@ -36,7 +36,8 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     const [inviteModalVisible, setInviteModalVisible] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
 
-    const inviteMutation = useInviteMember(selectedTeam?.id || '');
+    const inviteMutation = useInviteMember();
+    const leaveTeamMutation = useLeaveTeam();
 
     const handleTeamPress = (team: Team) => {
         setCurrentTeamId(team.id);
@@ -55,21 +56,42 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
     const handleLeaveTeam = () => {
         setActionMenuVisible(false);
+        if (!selectedTeam) return;
+
+        const isManager = selectedTeam.role === 'manager';
+        const title = isManager ? 'Delete Workspace?' : 'Leave Workspace';
+        const message = isManager
+            ? `You are a manager. Leaving "${selectedTeam.name}" will DELETE the workspace and all data. This cannot be undone.`
+            : `Are you sure you want to leave "${selectedTeam.name}"?`;
+        const actionText = isManager ? 'Delete Workspace' : 'Leave';
+
         Alert.alert(
-            'Leave Workspace',
-            `Are you sure you want to leave "${selectedTeam?.name}"?`,
+            title,
+            message,
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
-                    text: 'Leave',
+                    text: actionText,
                     style: 'destructive',
-                    onPress: () => {
-                        // TODO: Implement leave team API
-                        Toast.show({
-                            type: 'info',
-                            text1: 'Coming soon',
-                            text2: 'Leave workspace feature will be available soon'
-                        });
+                    onPress: async () => {
+                        try {
+                            await leaveTeamMutation.mutateAsync(selectedTeam.id);
+
+                            // If leaving current team, reset/redirect
+                            if (selectedTeam.id === currentTeamId) {
+                                // Find another team to switch to
+                                const otherTeams = teams?.filter(t => t.id !== selectedTeam.id) || [];
+                                if (otherTeams.length > 0) {
+                                    setCurrentTeamId(otherTeams[0].id);
+                                } else {
+                                    // No teams left, reset to null state
+                                    setCurrentTeamId(null);
+                                }
+                            }
+                        } catch (error) {
+                            // Error handled by mutation hook
+                            console.error('Failed to leave team:', error);
+                        }
                     }
                 }
             ]
@@ -77,10 +99,13 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     };
 
     const handleSendInvite = async () => {
-        if (!inviteEmail.trim()) return;
+        if (!inviteEmail.trim() || !selectedTeam) return;
 
         try {
-            await inviteMutation.mutateAsync({ email: inviteEmail.trim() });
+            await inviteMutation.mutateAsync({
+                teamId: selectedTeam.id,
+                email: inviteEmail.trim()
+            });
             setInviteModalVisible(false);
             setInviteEmail('');
         } catch (error) {
@@ -454,11 +479,10 @@ const styles = StyleSheet.create({
     },
     // Action Menu Styles
     actionMenuContainer: {
-        margin: 20,
-        marginTop: 'auto',
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-        paddingBottom: 20,
+        margin: 24,
+        borderRadius: 16,
+        paddingBottom: 8,
+        elevation: 4,
     },
     actionMenuHeader: {
         flexDirection: 'row',

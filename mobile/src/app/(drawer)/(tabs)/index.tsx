@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Text, Card, Chip, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useQueryClient } from '@tanstack/react-query';
+import { useFocusEffect } from 'expo-router';
 import { useAppStore } from '@/stores/use-app-store';
 import { useTeam } from '@/hooks/use-teams';
 import { useTaskStats } from '@/hooks/use-tasks';
@@ -11,8 +12,16 @@ export default function DashboardScreen() {
   const theme = useTheme();
   const { currentTeamId } = useAppStore();
   const { data: team, isLoading: teamLoading, refetch: refetchTeam, isRefetching: teamRefetching } = useTeam(currentTeamId);
-  const { stats, isLoading: statsLoading } = useTaskStats(currentTeamId);
+  const { stats, isLoading: statsLoading, refetch: refetchStats } = useTaskStats(currentTeamId);
   const queryClient = useQueryClient();
+
+  // Refetch data when screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      refetchTeam();
+      refetchStats();
+    }, [refetchTeam, refetchStats])
+  );
 
   const handleRefresh = async () => {
     await Promise.all([
@@ -92,13 +101,13 @@ export default function DashboardScreen() {
               <Text variant="displaySmall" style={{ color: StatusColors.in_progress }}>
                 {stats.in_progress}
               </Text>
-              <Text variant="labelSmall">Active</Text>
+              <Text variant="labelSmall">In Progress</Text>
             </View>
             <View style={styles.statItem}>
               <Text variant="displaySmall" style={{ color: StatusColors.blocked }}>
                 {stats.blocked}
               </Text>
-              <Text variant="labelSmall">Help Needed</Text>
+              <Text variant="labelSmall">Blocked</Text>
             </View>
             <View style={styles.statItem}>
               <Text variant="displaySmall" style={{ color: StatusColors.done }}>
@@ -127,7 +136,7 @@ export default function DashboardScreen() {
             </View>
             <View style={styles.breakdownItem}>
               <View style={[styles.statusDot, { backgroundColor: StatusColors.blocked }]} />
-              <Text variant="bodyMedium">Help Needed</Text>
+              <Text variant="bodyMedium">Blocked</Text>
               <Text variant="labelMedium" style={styles.breakdownCount}>{stats.blocked}</Text>
             </View>
             <View style={styles.breakdownItem}>

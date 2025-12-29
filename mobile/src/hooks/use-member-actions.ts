@@ -20,7 +20,7 @@ export function useInviteMember() {
 
     return useMutation({
         mutationFn: async ({ teamId, email }: InviteMemberParams) => {
-            return apiFetch(`/api/teams/${teamId}/invite`, {
+            return apiFetch(`/api/teams/${teamId}/members`, {
                 method: 'POST',
                 body: JSON.stringify({ email }),
             });
@@ -89,6 +89,39 @@ export function useRemoveMember() {
         },
         onSettled: (_, __, { teamId }) => {
             queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
+        },
+    });
+}
+
+/**
+ * Hook for leaving a team
+ */
+export function useLeaveTeam() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (teamId: string) => {
+            return apiFetch(`/api/teams/${teamId}/leave`, {
+                method: 'POST',
+            });
+        },
+        onSuccess: (_, teamId) => {
+            Toast.show({
+                type: 'success',
+                text1: 'Left workspace successfully 👋',
+                visibilityTime: 2000,
+            });
+            // We need to invalidate teams list so the UI updates
+            queryClient.invalidateQueries({ queryKey: ['teams'] });
+            queryClient.invalidateQueries({ queryKey: ['user-teams'] });
+        },
+        onError: (error) => {
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to leave workspace',
+                text2: error instanceof Error ? error.message : 'Please try again',
+                visibilityTime: 3000,
+            });
         },
     });
 }

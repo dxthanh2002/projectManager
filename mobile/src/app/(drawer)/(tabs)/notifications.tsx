@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { Text, Button, ActivityIndicator, useTheme } from 'react-native-paper';
+import { useFocusEffect } from 'expo-router';
 import { useNotifications, useMarkAsRead, Notification } from '@/hooks/use-notifications';
 import { NotificationItem } from '@/components/NotificationItem';
 import { useAppStore } from '@/stores/use-app-store';
@@ -10,6 +11,13 @@ export default function NotificationsScreen() {
     const { currentTeamId } = useAppStore();
     const { data: notifications, isLoading, refetch, isRefetching, error } = useNotifications();
     const markAsReadMutation = useMarkAsRead();
+
+    // Refetch data when screen gains focus
+    useFocusEffect(
+        useCallback(() => {
+            refetch();
+        }, [refetch])
+    );
 
     const handleNotificationPress = useCallback((notification: Notification) => {
         // Mark as read

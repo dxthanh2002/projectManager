@@ -37,8 +37,8 @@ export function TaskFilters({
     const statusOptions = [
         { value: 'all', label: 'All' },
         { value: 'todo', label: 'To Do' },
-        { value: 'in_progress', label: 'Active' },
-        { value: 'blocked', label: 'Help' },
+        { value: 'in_progress', label: 'In Progress' },
+        { value: 'blocked', label: 'Blocked' },
         { value: 'done', label: 'Done' },
     ];
 

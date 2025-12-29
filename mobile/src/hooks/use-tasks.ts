@@ -50,7 +50,7 @@ export function useTasks(teamId: string | null, filters?: TaskFilters) {
  * @returns Object with counts per status
  */
 export function useTaskStats(teamId: string | null) {
-    const { data: tasks, isLoading } = useTasks(teamId);
+    const { data: tasks, isLoading, refetch } = useTasks(teamId);
 
     const stats = {
         total: tasks?.length ?? 0,
@@ -60,5 +60,5 @@ export function useTaskStats(teamId: string | null) {
         blocked: tasks?.filter(t => t.status === 'blocked').length ?? 0,
     };
 
-    return { stats, isLoading };
+    return { stats, isLoading, refetch };
 }

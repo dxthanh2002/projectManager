@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Avatar, useTheme } from 'react-native-paper';
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import { Comment } from '../hooks/use-comments';
 
 interface CommentItemProps {
@@ -11,19 +13,36 @@ export function CommentItem({ comment }: CommentItemProps) {
     const theme = useTheme();
 
     // Format relative time
-    const formatTimeAgo = (dateStr: string) => {
-        const date = new Date(dateStr);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
 
-        if (diffMins < 1) return 'Vừa xong';
-        if (diffMins < 60) return `${diffMins} phút trước`;
-        if (diffHours < 24) return `${diffHours} giờ trước`;
-        if (diffDays < 7) return `${diffDays} ngày trước`;
-        return date.toLocaleDateString('vi-VN');
+    // ...
+
+    // Format relative time
+    const formatTimeAgo = (dateStr: string) => {
+        try {
+            let date = new Date(dateStr);
+            const now = new Date();
+
+            // If date is in the future, it's likely a timezone issue (Local time treated as UTC)
+            if (date > now) {
+                // Try treating it as local time by stripping 'Z' if present
+                if (dateStr.endsWith('Z')) {
+                    const localDateStr = dateStr.slice(0, -1);
+                    const localDate = new Date(localDateStr);
+                    if (localDate <= now) {
+                        date = localDate;
+                    }
+                }
+
+                // If still future, clamp to now
+                if (date > now) {
+                    return 'Vừa xong';
+                }
+            }
+
+            return formatDistanceToNow(date, { addSuffix: true, locale: vi });
+        } catch (e) {
+            return 'Vừa xong';
+        }
     };
 
     // Get initials for avatar

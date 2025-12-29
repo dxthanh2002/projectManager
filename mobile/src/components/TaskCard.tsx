@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Card, Text, Chip, useTheme } from 'react-native-paper';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Task } from '../types/api';
 import { StatusColors, StatusLabels, PriorityColors } from '../constants/theme';
 
@@ -9,22 +10,17 @@ interface TaskCardProps {
     onPress?: (task: Task) => void;
 }
 
-// Helper to create color with alpha
-const withAlpha = (hexColor: string, alpha: number): string => {
-    if (hexColor.startsWith('#')) {
-        const r = parseInt(hexColor.slice(1, 3), 16);
-        const g = parseInt(hexColor.slice(3, 5), 16);
-        const b = parseInt(hexColor.slice(5, 7), 16);
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    }
-    return hexColor;
-};
+// Priority icons
+const PriorityIcons = {
+    low: 'arrow-down',
+    medium: 'minus',
+    high: 'arrow-up',
+} as const;
 
-// Priority labels in English
 const PriorityLabels = {
-    low: 'Low',
-    medium: 'Medium',
-    high: 'High',
+    low: 'Thấp',
+    medium: 'TB',
+    high: 'Cao',
 } as const;
 
 export function TaskCard({ task, onPress }: TaskCardProps) {
@@ -33,6 +29,7 @@ export function TaskCard({ task, onPress }: TaskCardProps) {
     const priorityColor = PriorityColors[task.priority];
     const statusLabel = StatusLabels[task.status];
     const priorityLabel = PriorityLabels[task.priority];
+    const priorityIcon = PriorityIcons[task.priority];
 
     // Format due date
     const formatDueDate = (dateStr: string | null) => {
@@ -42,122 +39,168 @@ export function TaskCard({ task, onPress }: TaskCardProps) {
         const diff = date.getTime() - now.getTime();
         const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
 
-        if (days < 0) return 'Overdue';
-        if (days === 0) return 'Due today';
-        if (days === 1) return 'Due tomorrow';
-        if (days <= 7) return `Due in ${days} days`;
-        return date.toLocaleDateString();
+        if (days < 0) return { text: 'Quá hạn', isOverdue: true };
+        if (days === 0) return { text: 'Hôm nay', isOverdue: false };
+        if (days === 1) return { text: 'Ngày mai', isOverdue: false };
+        if (days <= 7) return { text: `${days} ngày`, isOverdue: false };
+        return { text: date.toLocaleDateString('vi-VN'), isOverdue: false };
     };
 
-    const dueDateText = formatDueDate(task.dueDate);
-    const isOverdue = dueDateText === 'Overdue';
+    const dueDateInfo = formatDueDate(task.dueDate);
 
     return (
-        <Card
-            style={styles.card}
+        <Pressable
             onPress={() => onPress?.(task)}
-            mode="elevated"
+            style={({ pressed }) => [
+                styles.card,
+                { backgroundColor: theme.colors.surface },
+                pressed && styles.cardPressed,
+            ]}
         >
-            <Card.Content style={styles.content}>
-                {/* Header Row: Title + Priority */}
-                <View style={styles.headerRow}>
+            {/* Status color indicator bar */}
+            <View style={[styles.statusBar, { backgroundColor: statusColor }]} />
+
+            <View style={styles.content}>
+                {/* Top Row: Priority Icon + Title */}
+                <View style={styles.topRow}>
+                    <View style={[styles.priorityIcon, { backgroundColor: priorityColor + '20' }]}>
+                        <MaterialCommunityIcons
+                            name={priorityIcon as any}
+                            size={14}
+                            color={priorityColor}
+                        />
+                    </View>
                     <Text
-                        variant="titleMedium"
+                        variant="titleSmall"
                         style={styles.title}
                         numberOfLines={2}
                     >
                         {task.title}
                     </Text>
-                    <View style={[
-                        styles.priorityBadge,
-                        { backgroundColor: withAlpha(priorityColor, 0.15) }
-                    ]}>
-                        <Text style={[styles.priorityText, { color: priorityColor }]}>
-                            {priorityLabel}
-                        </Text>
-                    </View>
                 </View>
 
                 {/* Description (if exists) */}
                 {task.description && (
                     <Text
                         variant="bodySmall"
-                        style={styles.description}
+                        style={[styles.description, { color: theme.colors.onSurfaceVariant }]}
                         numberOfLines={2}
                     >
                         {task.description}
                     </Text>
                 )}
 
-                {/* Footer Row: Status + Due Date */}
-                <View style={styles.footerRow}>
+                {/* Bottom Row: Status Badge + Due Date */}
+                <View style={styles.bottomRow}>
+                    {/* Status Badge */}
                     <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
                         <Text style={styles.statusText}>{statusLabel}</Text>
                     </View>
 
-                    {dueDateText && (
-                        <Text
-                            variant="labelSmall"
-                            style={[
-                                styles.dueDate,
-                                isOverdue && { color: theme.colors.error }
-                            ]}
-                        >
-                            {dueDateText}
-                        </Text>
+                    {/* Spacer */}
+                    <View style={{ flex: 1 }} />
+
+                    {/* Due Date */}
+                    {dueDateInfo && (
+                        <View style={[
+                            styles.dueDateContainer,
+                            dueDateInfo.isOverdue && { backgroundColor: theme.colors.errorContainer }
+                        ]}>
+                            <MaterialCommunityIcons
+                                name="calendar-clock"
+                                size={12}
+                                color={dueDateInfo.isOverdue ? theme.colors.error : theme.colors.onSurfaceVariant}
+                            />
+                            <Text
+                                style={[
+                                    styles.dueDate,
+                                    { color: dueDateInfo.isOverdue ? theme.colors.error : theme.colors.onSurfaceVariant }
+                                ]}
+                            >
+                                {dueDateInfo.text}
+                            </Text>
+                        </View>
                     )}
                 </View>
-            </Card.Content>
-        </Card>
+            </View>
+        </Pressable>
     );
 }
 
 const styles = StyleSheet.create({
     card: {
-        marginBottom: 12,
+        flexDirection: 'row',
+        marginBottom: 10,
+        marginHorizontal: 2,
+        borderRadius: 12,
+        overflow: 'hidden',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+    },
+    cardPressed: {
+        opacity: 0.85,
+        transform: [{ scale: 0.99 }],
+    },
+    statusBar: {
+        width: 4,
     },
     content: {
+        flex: 1,
+        padding: 14,
         gap: 10,
     },
-    headerRow: {
+    topRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'flex-start',
-        gap: 12,
+        gap: 10,
+    },
+    priorityIcon: {
+        width: 24,
+        height: 24,
+        borderRadius: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 1,
     },
     title: {
         flex: 1,
         fontWeight: '600',
+        lineHeight: 20,
     },
-    priorityBadge: {
+    description: {
+        lineHeight: 18,
+        marginLeft: 34,
+    },
+    bottomRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: 2,
+    },
+    statusBadge: {
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 6,
     },
-    priorityText: {
-        fontSize: 11,
-        fontWeight: '600',
-    },
-    description: {
-        opacity: 0.7,
-    },
-    footerRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 4,
-    },
-    statusBadge: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 6,
-    },
     statusText: {
         color: '#FFFFFF',
-        fontSize: 12,
-        fontWeight: '600',
+        fontSize: 11,
+        fontWeight: '700',
+        letterSpacing: 0.3,
+    },
+    dueDateContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
     },
     dueDate: {
-        opacity: 0.7,
+        fontSize: 11,
+        fontWeight: '500',
     },
 });

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { Text, Button, ActivityIndicator, useTheme, FAB } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import BottomSheet from '@gorhom/bottom-sheet';
 
 import { useAppStore } from '@/stores/use-app-store';
@@ -47,6 +47,13 @@ export default function TasksScreen() {
         priority: filters.priority !== 'all' ? filters.priority : undefined,
         assigneeId: assigneeFilter,
     });
+
+    // Refetch data when screen gains focus
+    useFocusEffect(
+        useCallback(() => {
+            refetch();
+        }, [refetch])
+    );
 
     const handleTaskPress = useCallback((task: Task) => {
         setSelectedTask(task);
@@ -112,16 +119,14 @@ export default function TasksScreen() {
                     <Text variant="bodyMedium" style={styles.emptyText}>
                         Ready to get productive?
                     </Text>
-                    {viewMode !== 'assigned' && (
-                        <Button
-                            mode="contained"
-                            onPress={handleCreateTask}
-                            style={styles.createButton}
-                            icon="plus"
-                        >
-                            Create Task
-                        </Button>
-                    )}
+                    <Button
+                        mode="contained"
+                        onPress={handleCreateTask}
+                        style={styles.createButton}
+                        icon="plus"
+                    >
+                        Create Task
+                    </Button>
                 </View>
             </View>
         );
@@ -162,14 +167,12 @@ export default function TasksScreen() {
                 }
             />
 
-            {/* FAB for creating task (Manager only) */}
-            {viewMode !== 'assigned' && (
-                <FAB
-                    icon="plus"
-                    style={styles.fab}
-                    onPress={handleCreateTask}
-                />
-            )}
+            {/* FAB for creating task */}
+            <FAB
+                icon="plus"
+                style={styles.fab}
+                onPress={handleCreateTask}
+            />
 
             {/* Task Detail Bottom Sheet */}
             <TaskDetailSheet

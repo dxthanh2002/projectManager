@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import {
     Text,
@@ -10,6 +10,7 @@ import {
     Portal,
     TextInput
 } from 'react-native-paper';
+import { useFocusEffect } from 'expo-router';
 import { useAppStore } from '@/stores/use-app-store';
 import { useSession } from '@/lib/auth-client';
 import { useTeamMembers } from '@/hooks/use-team-members';
@@ -27,9 +28,28 @@ export default function MembersScreen() {
     const inviteMutation = useInviteMember();
     const removeMutation = useRemoveMember();
 
+    // Refetch data when screen gains focus
+    useFocusEffect(
+        useCallback(() => {
+            refetch();
+        }, [refetch])
+    );
+
     // Check if current user is manager
     const currentUserMember = members?.find(m => m.id === session?.user?.id);
     const isManager = currentUserMember?.role === 'manager';
+
+    // Sort members: managers first, then by joinedAt
+    const sortedMembers = useMemo(() => {
+        if (!members) return [];
+        return [...members].sort((a, b) => {
+            // Managers first
+            if (a.role === 'manager' && b.role !== 'manager') return -1;
+            if (a.role !== 'manager' && b.role === 'manager') return 1;
+            // Then by join date
+            return new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime();
+        });
+    }, [members]);
 
     const handleInvite = async () => {
         if (!currentTeamId || !inviteEmail.trim()) return;
@@ -122,7 +142,7 @@ export default function MembersScreen() {
 
             {/* Members List */}
             <FlatList
-                data={members}
+                data={sortedMembers}
                 renderItem={({ item }) => (
                     <MemberItem
                         member={item}

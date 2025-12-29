@@ -6,6 +6,8 @@ export interface Team {
     name: string;
     description: string | null;
     createdById: string;
+    role: 'manager' | 'member';
+    memberCount: number;
     createdAt: string;
     updatedAt: string;
 }
