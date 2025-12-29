@@ -50,7 +50,7 @@ export const api = {
     teams: {
         list: () => apiFetch<Team[]>('/api/teams'),
         get: (id: string) => apiFetch<Team>(`/api/teams/${id}`),
-        create: (data: { name: string }) => apiFetch<Team>('/api/teams', {
+        create: (data: { name: string; description?: string }) => apiFetch<Team>('/api/teams', {
             method: 'POST',
             body: JSON.stringify(data),
         }),

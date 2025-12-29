@@ -1,16 +1,19 @@
 import React, { useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, Chip, ActivityIndicator, useTheme } from 'react-native-paper';
+import { Text, Card, Chip, ActivityIndicator, useTheme, Button } from 'react-native-paper';
 import { useQueryClient } from '@tanstack/react-query';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppStore } from '@/stores/use-app-store';
-import { useTeam } from '@/hooks/use-teams';
+import { useTeam, useTeams } from '@/hooks/use-teams';
 import { useTaskStats } from '@/hooks/use-tasks';
 import { StatusColors } from '@/constants/theme';
 
 export default function DashboardScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { currentTeamId } = useAppStore();
+  const { data: teams, isLoading: teamsLoading } = useTeams();
   const { data: team, isLoading: teamLoading, refetch: refetchTeam, isRefetching: teamRefetching } = useTeam(currentTeamId);
   const { stats, isLoading: statsLoading, refetch: refetchStats } = useTaskStats(currentTeamId);
   const queryClient = useQueryClient();
@@ -30,10 +33,46 @@ export default function DashboardScreen() {
     ]);
   };
 
+  const handleCreateWorkspace = () => {
+    router.push('/modal');
+  };
+
   const isLoading = teamLoading || statsLoading;
   const isRefetching = teamRefetching;
 
-  // No team selected state
+  // New user with no workspaces - show onboarding
+  if (!teamsLoading && (!teams || teams.length === 0)) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.onboardingContainer}>
+          <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+            <MaterialCommunityIcons
+              name="briefcase-plus-outline"
+              size={64}
+              color={theme.colors.primary}
+            />
+          </View>
+          <Text variant="headlineMedium" style={styles.onboardingTitle}>
+            Chào mừng đến ManagerCheck! 🎉
+          </Text>
+          <Text variant="bodyLarge" style={[styles.onboardingText, { color: theme.colors.onSurfaceVariant }]}>
+            Bạn chưa có workspace nào. Hãy tạo workspace đầu tiên để bắt đầu quản lý công việc.
+          </Text>
+          <Button
+            mode="contained"
+            icon="plus"
+            onPress={handleCreateWorkspace}
+            style={styles.createButton}
+            contentStyle={styles.createButtonContent}
+          >
+            Tạo Workspace
+          </Button>
+        </View>
+      </View>
+    );
+  }
+
+  // No team selected state (has workspaces but none selected)
   if (!currentTeamId) {
     return (
       <View style={styles.container}>
@@ -211,5 +250,36 @@ const styles = StyleSheet.create({
   breakdownCount: {
     marginLeft: 'auto',
     opacity: 0.7,
+  },
+  onboardingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+    gap: 20,
+  },
+  iconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  onboardingTitle: {
+    textAlign: 'center',
+    fontWeight: '700',
+  },
+  onboardingText: {
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  createButton: {
+    marginTop: 12,
+    borderRadius: 12,
+  },
+  createButtonContent: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
 });
